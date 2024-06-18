@@ -1,0 +1,5 @@
+.datatable td:nth-child(1),
+.datatable td:nth-child(5),
+.datatable td:nth-child(6) {
+    width: 5%;
+}

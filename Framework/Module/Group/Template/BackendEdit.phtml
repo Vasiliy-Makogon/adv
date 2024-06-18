@@ -1,0 +1,182 @@
+<?php
+
+use Krugozor\Cover\CoverArray;
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Group\Model\Group;
+use Krugozor\Framework\Module\Module\Model\Controller;
+use Krugozor\Framework\Module\Module\Model\Module;
+use Krugozor\Framework\Statical\Strings;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+/** @var Group $groupModel */
+$groupModel = $this->getStorage()->get('groupModel');
+
+/** @var CoverArray $modulesModelList */
+$modulesModelList = $this->getStorage()->get('modulesModelList');
+
+$return_on_page = $this->getRequest()->getRequest('return_on_page', Request::SANITIZE_INT);
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+        'group' => ['backend-edit.css'],
+    ]) ?>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+
+<form method="post" action="<?= $this->getRequest()->getRequestUri()->getEscapeUriValue() ?>">
+    <table class="edit">
+        <thead>
+        <tr>
+            <th colspan="2">
+                <?php if ($groupModel->getId()): ?>
+                    <?= Strings::createMessageFromParams(
+                        $this->getLang()->get('content.editing_group'),
+                        ['group_name' => $groupModel->getName()]
+                    ) ?>
+                <?php else: ?>
+                    Добавление группы
+                <?php endif; ?>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td class="compulsory">Имя группы:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'group[name]',
+                    $groupModel->getName(),
+                    ['maxlength' => 255]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('name')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Алиас группы:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'group[alias]',
+                    $groupModel->getAlias(),
+                    ['maxlength' => 30]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('alias')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Группа активна:</td>
+            <td>
+                <?php
+                $select = $this->getHelper(Form::class)->inputSelect(
+                    'group[active]',
+                    $groupModel->getActive()
+                );
+                $select->addOption(
+                    $this->getHelper(Form::class)->inputOption(
+                        1, $this->getLang()->get('content.yes')
+                    )
+                );
+                $select->addOption(
+                    $this->getHelper(Form::class)->inputOption(
+                        0, $this->getLang()->get('content.no')
+                    )
+                );
+                echo $select->getHtml();
+                ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('active')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Доступы группы:</td>
+            <td>
+                <?php
+                /** @var Module $moduleModel */
+                foreach ($modulesModelList as $moduleModel): ?>
+                    <fieldset>
+                        <legend><?= $moduleModel->getName() ?></legend>
+                        <?php if ($moduleModel->getControllersList()->count()): ?>
+                            <?php
+                            /** @var Controller $controllerModel */
+                            foreach ($moduleModel->getControllersList() as $controllerModel): ?>
+                                <div>
+                                    <?php
+                                    $access = (int) $groupModel->getDenormalizedAccesses()->checkAccess(
+                                        $moduleModel->getKey(),
+                                        $controllerModel->getKey()
+                                    );
+                                    $label = sprintf('label_%s_%s', $moduleModel->getId(), $controllerModel->getId());
+                                    ?>
+                                    <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                                        sprintf('group[accesses][%s][%s]', $moduleModel->getId(), $controllerModel->getId()),
+                                        1, 0,
+                                        $access,
+                                        ['id' => $label]
+                                    ) ?>
+                                    <?= $this->getHelper(Form::class)->label(
+                                        $controllerModel->getName(),
+                                        $label
+                                    )->getHtml() ?>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </fieldset>
+                <?php endforeach; ?>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputHidden(
+                    'group[id]',
+                    $groupModel->getId()
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputSubmit(
+                    'submit',
+                    $this->getLang()->get('content.save_changes')
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                    'return_on_page', 1, 0, $return_on_page,
+                    ['id' => 'label_return_on_page']
+                ) ?>
+
+                <?= $this->getHelper(Form::class)->label(
+                    $this->getLang()->get('content.return_to_this_page'),
+                    'label_return_on_page'
+                )->getHtml() ?>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</form>
+
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

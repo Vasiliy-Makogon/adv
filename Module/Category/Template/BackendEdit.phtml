@@ -1,0 +1,221 @@
+<?php
+
+use Krugozor\Cover\CoverArray;
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Category\Helper\OptionsList;
+use Krugozor\Framework\Module\Category\Model\Category;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+/** @var Category $category */
+$category = $this->getStorage()->offsetGet('category');
+
+/** @var CoverArray $tree */
+$tree = $this->getStorage()->offsetGet('tree');
+
+/** @var int $return_on_page */
+$return_on_page = $this->getRequest()->getRequest('return_on_page', Request::SANITIZE_INT);
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+    ]) ?>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.ajax.js') ?>
+    <?= $this->getJs() ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+
+<form method="post"
+      action="<?= $this->getRequest()->getRequestUri()->getEscapeUriValue() ?>">
+    <table class="edit">
+        <thead>
+            <tr>
+                <th colspan="2">
+                    <?php if ($category->getId()): ?>
+                        Редактирование категории &laquo;<?= Format::hsc($category->getName()) ?>&raquo;
+                    <?php else: ?>
+                        Добавление категории
+                    <?php endif; ?>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td class="compulsory">Родительский узел:</td>
+            <td>
+                <?php
+                $select = $this->getHelper(Form::class)->inputSelect('category[pid]', $category->getPid());
+                $select->addOption($this->getHelper(Form::class)->inputOption('0', 'Новый узел'));
+                foreach ((new OptionsList($tree))->getOptions() as $option):
+                    $select->addOption($option);
+                endforeach;
+                echo $select->getHtml();
+                ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('pid')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Имя категории:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'category[name]',
+                    $category->getName(),
+                    ['maxlength' => 255]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('name')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">URL категории:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'category[alias]',
+                    $category->getAlias(),
+                    ['maxlength' => 255]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('alias')
+                ) ?>
+            </td>
+        </tr>
+        <?php if ($category->getUrl()): ?>
+            <tr>
+                <td class="compulsory">Полный URL категории:</td>
+                <td><?= $category->getUrl() ?></td>
+            </tr>
+        <?php endif; ?>
+        <tr>
+            <td class="compulsory">Типы объявлений:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'category[advert_types]',
+                    $category->getAdvertTypes()->getValue()
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('advert_types')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td><label for="category_is_service">Категория услуг:</label></td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                    'category[is_service]', 1, 0, $category->getIsService(), ['id' => 'category_is_service']
+                ) ?>
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('is_service')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Описание категории:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputTextarea(
+                    'category[description]',
+                    $category->getDescription()
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('description')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Описание категории внизу:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputTextarea(
+                    'category[text]',
+                    $category->getText()
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('text')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Ключевые слова:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputTextarea(
+                    'category[keywords]',
+                    $category->getKeywords(),
+                    ['id' => 'js-category-keywords']
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('keywords')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Количество элементов:</td>
+            <td><?= $category->getAdvertCount() ?></td>
+        </tr>
+        <tr>
+            <td><label for="category_paid">Платная категория:</label></td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                    'category[paid]', 1, 0, $category->getPaid(), ['id' => 'category_paid']
+                ) ?>
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('paid')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputHidden(
+                    'category[id]',
+                    $category->getId()
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputSubmit(
+                    'submit',
+                    $this->getLang()->get('content.save_changes')
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                    'return_on_page', 1, 0,
+                    $return_on_page,
+                    ['id' => 'label_return_on_page']
+                ) ?>
+
+                <?= $this->getHelper(Form::class)->label(
+                    $this->getLang()->get('content.return_to_this_page'),
+                    'label_return_on_page'
+                )->getHtml() ?>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</form>
+
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

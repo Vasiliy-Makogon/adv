@@ -1,0 +1,106 @@
+
+
+
+.two_column.login {
+    justify-content: flex-start;
+}
+.two_column.login .left_column {
+    flex-basis: auto;
+}
+.two_column.login .left_column menu.left_column_content {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: stretch;
+}
+.two_column.login .left_column menu.left_column_content > li {
+    flex: 0 1 auto;
+}
+.two_column.login .left_column menu.left_column_content > li:where(:not(:last-child)) {
+    margin-bottom:10px;
+}
+.two_column.login .left_column menu.left_column_content > li.add a {
+    /* https://www.svgrepo.com/svg/449864/plus-circle */
+    background-image: url(/svg/local/main-menu-icon-add.svg);
+}
+.two_column.login .left_column menu.left_column_content > li.userinfo a {
+    /* https://www.svgrepo.com/svg/449958/user */
+    background-image: url(/svg/local/icon-16-user-info.svg);
+}
+.two_column.login .left_column menu.left_column_content > li.list a {
+    /* https://www.svgrepo.com/svg/449807/list */
+    background-image: url(/svg/local/icon-16-list.svg);
+}
+.two_column.login .left_column menu.left_column_content > li.logout a {
+    /* https://www.svgrepo.com/svg/449957/upload */
+    background-image: url(/svg/local/main-menu-icon-logout.svg);
+}
+
+
+.two_column.login .right_column {
+    flex-basis:100%;
+    font-size: var(--font-size-14);
+}
+.two_column.login .right_column .right_column_content {
+    padding:0 0 0 5rem;
+}
+.two_column.login .right_column .right_column_content ol li {
+    margin: 0 0 1rem 0;
+}
+
+.two_column.login .right_column .right_column_content h2 {
+    margin-bottom: 1rem;
+    color: var(--color-b-header);
+}
+.two_column.login .right_column .right_column_content p.profile_link {
+    font-size: var(--font-size-18);
+    color: var(--color-primary-link);
+    margin: 2rem;
+}
+.two_column.login .right_column .right_column_content p.profile_link var {
+    padding: 1rem;
+    background-color: var(--advert-bg-color);
+}
+
+@media screen and (max-width: 1000px) {
+    .two_column.login .right_column .right_column_content {
+        padding:2rem 0 0 0;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* User logout */
+div.two_column.logout {
+    font-size: var(--font-size-14);
+}
+div.two_column.logout div.left_column {
+
+}
+div.two_column.logout div.right_column {
+    border-left:1px solid #CCC;
+    padding-left:10px;
+}
+@media screen and (max-width: 780px) {
+    div.two_column.logout div.right_column {
+        border-left:none;
+        padding-left:0;
+    }
+}
+/* Для всплывающей подсказки около чекбокса "запомнить пароль" меняем позицию сноски */
+div.animate_field_description_remember_password div.triangle-right {
+    top:5px;
+}
+div.animate_field_description_remember_password div.triangle-right-border {
+    top:4px;
+}

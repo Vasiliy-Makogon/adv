@@ -1,0 +1,32 @@
+<?php
+use Krugozor\Framework\Registry;
+use Krugozor\Framework\Context;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\View;
+
+/* @var $this View */
+
+$debugKey = Registry::getInstance()->get('DEBUG.QS_DEBUG_KEY');
+
+if ($this->isEnabledDebugInfo() or !empty($debugKey) && $this->getRequest()->getRequest($debugKey, Request::SANITIZE_INT)): ?>
+    <!--noindex-->
+    <div style="line-height:1.5em">
+        <strong>Локаль:</strong> <?=setlocale(LC_ALL, 0)?><br>
+        <strong>Cookie</strong>: <?= print_r($this->getRequest()->getCookie()->getDataAsArray(), 1); ?><br>
+        <strong>Модуль</strong>: <?= $this->getRequest()->getModuleName()->getCamelCaseStyle() ?><br>
+        <strong>Контроллер</strong>: <?= $this->getRequest()->getControllerName()->getCamelCaseStyle() ?><br>
+        <strong>URI</strong>: <?= $this->getRequest()->getCanonicalRequestUri()->getSimpleUriValue() ?><br>
+        <strong>REQUEST_URI</strong>: <?= $this->getRequest()->getRequestUri()->getSimpleUriValue() ?><br>
+        <?php foreach ($this->getRequest()->getRequest() as $key => $value): ?>
+            <strong><?= htmlspecialchars($key) ?></strong>: <?= htmlspecialchars($value) ?><br>
+        <?php endforeach; ?>
+        <strong>Время</strong> <?= (microtime(true) - TIME_START) ?><br>
+        <?php foreach (Context::getInstance()->getDatabase()->getQueries() as $key => $value): ?>
+            <p style="margin:10px 0 0 0"><strong><?= htmlspecialchars($key) ?></strong>: <?= htmlspecialchars($value) ?></p>
+        <?php endforeach; ?>
+    </div>
+    <pre>
+        <?php print_r($_SERVER); ?>
+    </pre>
+    <!--/noindex-->
+<?php endif; ?>

@@ -1,0 +1,91 @@
+<?php
+
+use Krugozor\Framework\View;
+
+/* @var $this View */
+
+?>
+<div class="wrap">
+
+    <?php if ($this->getRequest()->getControllerName()->getCamelCaseStyle() !== 'NotFound'): ?>
+        <!-- Yandex.Metrika counter -->
+        <script>
+            (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+                m[i].l=1*new Date();
+                for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+                k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+            (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+            ym(96862512, "init", {
+                clickmap:true,
+                trackLinks:true,
+                accurateTrackBounce:true,
+                webvisor:true
+            });
+        </script>
+        <noscript><div><img src="https://mc.yandex.ru/watch/96862512" style="position:absolute; left:-9999px;" alt=""></div></noscript>
+        <!-- /Yandex.Metrika counter -->
+
+        <!-- Top.Mail.Ru counter -->
+        <script>
+            var _tmr = window._tmr || (window._tmr = []);
+            _tmr.push({id: "3497547", type: "pageView", start: (new Date()).getTime()});
+            (function (d, w, id) {
+                if (d.getElementById(id)) return;
+                var ts = d.createElement("script"); ts.type = "text/javascript"; ts.async = true; ts.id = id;
+                ts.src = "https://top-fwz1.mail.ru/js/code.js";
+                var f = function () {var s = d.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ts, s);};
+                if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); }
+            })(document, window, "tmr-code");
+        </script>
+        <noscript><div><img src="https://top-fwz1.mail.ru/counter?id=3497547;js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru"></div></noscript>
+        <!-- /Top.Mail.Ru counter -->
+    <?php endif; ?>
+
+    <div class="top">
+        <div class="logo two_column">
+            <div class="left_column">
+                <a href="/">ADVERTS<svg width="17" height="17" viewBox="0 0 1024 1024" class="icon" xmlns="http://www.w3.org/2000/svg"><path d="M923.2 429.6H608l-97.6-304-97.6 304H97.6l256 185.6L256 917.6l256-187.2 256 187.2-100.8-302.4z" fill="#F63"></path><path d="M1024 396H633.6L512 21.6 390.4 396H0l315.2 230.4-121.6 374.4L512 770.4l316.8 232L707.2 628 1024 396zM512 730.4 256 917.6l97.6-302.4-256-185.6h315.2l97.6-304 97.6 304h315.2l-256 185.6L768 917.6 512 730.4z"></path></svg>RU</a>
+                <span>БЕСПЛАТНЫЕ ОБЪЯВЛЕНИЯ</span>
+            </div>
+            <div class="right_column">
+                <p>На сайте вы можете бесплатно и без регистрации разместить объявление о купле-продаже любого интересующего вас товара &mdash; начиная с квартиры и заканчивая домашними животными.
+                    Сайт содержит более 1500 тематических категорий, захватывающих все основные направления жизнедеятельности и бизнеса.</p>
+            </div>
+        </div>
+
+        <nav class="two_column">
+            <div class="left_column">
+
+                <input type="checkbox" id="menu_checkbox">
+                <menu class="left_column_content common_menu" itemscope itemtype="http://www.schema.org/SiteNavigationElement">
+                    <?php if ($this->getCurrentUser() && $this->getCurrentUser()->isGuest()): ?>
+                        <li class="add"><a itemprop="url" href="/advert/frontend-add/"><span itemprop="name">Подать объявление бесплатно</span></a></li>
+                        <li class="my"><a itemprop="url" href="/authorization/frontend-login/"><span itemprop="name">Войти / Регистрация</span></a></li>
+                    <?php else: ?>
+                        <li class="add"><a itemprop="url" href="/advert/frontend-edit-advert/"><span itemprop="name">Подать новое объявление</span></a></li>
+                        <li class="adv"><a itemprop="url" href="/advert/frontend-user-adverts-list/"><span itemprop="name">Мои объявления</span></a></li>
+                        <li class="my"><a itemprop="url" href="/authorization/frontend-login/"><span itemprop="name">Мой личный кабинет</span></a></li>
+                    <?php endif; ?>
+                    <li class="public_profile"><a itemprop="url" href="/help/b2b"><span itemprop="name">Публичные профили</span></a></li>
+                    <li class="info"><a itemprop="url" href="/help/poleznye_sovety"><span itemprop="name">Советы по размещению объявлений</span></a></li>
+
+                    <?php if ($this->getCurrentUser() && $this->getCurrentUser()->isGuest()): ?>
+                        <li class="question"><a itemprop="url" href="/help/faq#q16"><span itemprop="name">Как восстановить доступ?</span></a></li>
+                    <?php else: ?>
+                        <li class="logout">
+                            <a onclick="return confirm('Вы действительно хотите завершить работу с сайтом?')" href="/authorization/logout/?referer=<?=$this->getRequest()->getRequestUri()->getUrlencodeUriValue(true)?>">
+                                Выйти
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                </menu>
+
+            </div>
+            <div class="right_column">
+                <div class="right_column_content">
+                    <label class="menu_button" for="menu_checkbox"></label>
+                </div>
+            </div>
+        </nav>
+    </div>

@@ -1,0 +1,207 @@
+<?php
+
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Module\Advert\Model\Thumbnail;
+use Krugozor\Framework\Module\Advert\Service\FrontendAdvertsSimilarListService;
+use Krugozor\Framework\Module\Category\Helper\BreadCrumbs;
+use Krugozor\Framework\Module\User\Model\AbstractTerritory;
+use Krugozor\Framework\Registry;
+use Krugozor\Framework\Statical\Strings;
+use Krugozor\Framework\View;
+use Krugozor\Framework\Module\Category\Model\Category;
+use Krugozor\Framework\Module\Advert\Service\FrontendSingleAdvertListService;
+use Krugozor\Framework\Module\Advert\Model\Advert;
+use Krugozor\Framework\Module\User\Cover\TerritoryList;
+use Krugozor\Cover\CoverArray;
+
+/* @var $this View */
+
+/** @var FrontendSingleAdvertListService $singleAdvertListService */
+$singleAdvertListService = $this->getStorage()->get('singleAdvertListService');
+
+/** @var Advert $advert тоже самое, что и первый элемент $singleAdvertListService */
+$advert = $singleAdvertListService->getList()->getFirst()->get('advert');
+
+/** @var FrontendAdvertsSimilarListService $advertsSimilarListService */
+$advertsSimilarListService = $this->getStorage()->get('advertsSimilarListService');
+
+/** @var Category $currentCategory */
+$currentCategory = $this->getStorage()->get('currentCategory');
+
+/** @var TerritoryList $territoryList */
+$territoryList = $this->getStorage()->get('territoryList');
+
+/** @var string $keywords */
+$keywords = $currentCategory->getKeywords()
+    ? strip_tags($currentCategory->getKeywords())
+    : $this->getLang()->get('meta.keywords');
+$keywords = Strings::createMessageFromParams(
+    $keywords,
+    ['city' => $territoryList->getLastTerritory()->getNameRu2()]
+);
+
+$this->getLang()->get('meta')->replaceParams('description', [
+    'text' => Format::description($advert->getText()),
+    'id' => $advert->getId()
+]);
+$description = $this->getLang()->get('meta.description');
+
+$canonicalUrl = $this->getRequest()->getCanonicalRequestUri()->getSimpleUriValue(true);
+$siteName = Registry::getInstance()->get('HOSTINFO.SITE_NAME');
+$host = $this->getRequest()->getCanonicalRequestUri()->getHost();
+
+/** @var CoverArray $pathToCurrentCategory */
+$pathToCurrentCategory = $this->getStorage()->get('pathToCurrentCategory');
+
+/** @var CoverArray $similarAdverts */
+$similarAdvertsList = $this->getStorage()->get('similarAdvertsList');
+
+// Добавляем в title информацию о городе для и дату объявления для предотвращения дублирования title.
+$this->getLang()->get('title')->replaceParams(0, [
+    'advert_header' => Strings::trimPunctuation($advert->getHeader()),
+    'city' => $territoryList->getLastTerritory()->getNameRu2(),
+    'id' => $advert->getId()
+]);
+
+?>
+<!DOCTYPE html>
+<html lang="ru" prefix="og: https://ogp.me/ns# article: https://ogp.me/ns/article#">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="robots" content="index, follow, noarchive">
+    <meta charset="utf-8">
+    <meta name="referrer" content="unsafe-url">
+    <meta name="keywords" content="<?= $keywords ?>">
+    <meta name="description" content="<?= $description ?>">
+    <?= $this->getLang()->get('title')->getHtml() ?>
+
+    <?= $this->getLang()->get('title')->getOgHtml() ?>
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:url" content="<?= $canonicalUrl ?>">
+    <meta property="og:description" content="<?= $description ?>">
+    <meta property="og:site_name" content="<?= $siteName ?>">
+    <meta property="article:published_time" content="<?=$advert->getCreateDate()->format(DATE_ISO8601)?>">
+    <?php if ($advert->getEditDate()): ?>
+    <meta property="article:modified_time" content="<?=$advert->getEditDate()->format(DATE_ISO8601)?>">
+    <?php endif; ?>
+    <meta property="article:section" content="<?=$currentCategory->getName()?>">
+
+    <?php if ($advert->getThumbnailsList()->count()): ?>
+        <?php
+        /** @var Thumbnail $thumbnail */
+        foreach ($advert->getThumbnailsList() as $thumbnail): ?>
+            <meta property="og:image"
+                  content="<?= $host ?>/i/800x800<?= $thumbnail->getFullHttpPath() ?>">
+            <meta property="og:image:secure_url"
+                  content="<?= $host ?>/i/800x800<?= $thumbnail->getFullHttpPath() ?>">
+        <?php endforeach; ?>
+    <?php else: ?>
+        <meta property="og:image"
+              content="<?= $host ?>/img/local/snippet.jpg">
+        <meta property="og:image:secure_url"
+              content="<?= $host ?>/img/local/snippet.jpg">
+        <meta property="og:image:width" content="800">
+        <meta property="og:image:height" content="600">
+        <meta property="og:image:type" content="image/jpeg">
+    <?php endif; ?>
+
+    <link rel="canonical" href="<?= $canonicalUrl ?>">
+
+    <link rel="icon" href="<?= $host ?>/favicon.ico">
+    <link rel="apple-touch-icon" href="<?= $host ?>/apple-touch-icon.png">
+
+    <link rel="preload" href="/fonts/local/HANDGOTN.woff2" as="font" type="font/woff2" crossorigin>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'structure.css'],
+        'advert' => ['_adverts-list.css', 'frontend-advert-view.css'],
+    ]) ?>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.ajax.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.ui.popup.image.js') ?>
+    <?= $this->getJs() ?>
+    <?= $this->getJs('advert', '_adverts-list.js'); ?>
+
+    <script>window.yaContextCb=window.yaContextCb||[]</script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
+</head>
+<body itemscope itemtype="https://schema.org/ItemPage">
+
+<?php include $this->getRealTemplatePath('Local/FrontendTop') ?>
+
+<div class="content">
+
+    <?php include $this->getRealTemplatePath('Common/Notification') ?>
+
+    <header>
+        <nav itemprop="breadcrumb" itemscope itemtype="https://schema.org/BreadcrumbList">
+            <?php $i = 0;
+            /** @var AbstractTerritory $territory */
+            foreach ($territoryList as $territory): $i++; ?>
+                <?php if ($i != 1): ?>/<?php endif; ?>
+                <span itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    <a itemprop="item" href="<?= $territory->getUrl() ?>/categories/"
+                    ><span itemprop="name">Объявления в <?= $territory->getNameRu2() ?></span
+                        ><meta itemprop="position" content="<?= $i ?>"/></a>
+                </span>
+            <?php endforeach; ?>
+
+            <?= (new BreadCrumbs(
+                    $pathToCurrentCategory,
+                    $territoryList->getLastTerritory()->getUrl() . '/categories',
+                    '/')
+                )
+                ->lastElementIsLink(true)
+                ->withSchemaPosition(++$i)
+                ->getHtml();
+            ?>
+        </nav>
+    </header>
+
+    <ul class="advert_list advert_view">
+    <?php
+        $view = new View($this->getRealTemplatePath('Advert/AdvertsList'));
+        $view->getStorage()->offsetSet('advertsList', $singleAdvertListService->getList());
+        $view->getStorage()->offsetSet('isFrontendAdvertViewController', true);
+        $view->setCurrentUser($this->getCurrentUser());
+        $view->run();
+        echo $view->getOutput();
+    ?>
+    </ul>
+
+    <?php if ($advertsSimilarListService && $advertsSimilarListService->getList()->count()): ?>
+        <div class="bheader">Другие объявления из категории &laquo;<a
+            href="<?=$territoryList->getLastTerritory()->getUrl() . '/categories' . $currentCategory->getUrl()?>"><?= $currentCategory->getName() ?>
+                в <?= $territoryList->getLastTerritory()->getNameRu2() ?></a>&raquo;:
+        </div>
+        <ul class="advert_list advert_list_shop_33 advert_list_shop_20">
+        <?php
+            $view = new View($this->getRealTemplatePath('Advert/AdvertsList'));
+            $view->getStorage()->offsetSet('advertsList', $advertsSimilarListService->getList());
+            $view->setCurrentUser($this->getCurrentUser());
+            $view->run();
+            echo $view->getOutput();
+        ?>
+        </ul>
+    <?php endif; ?>
+
+</div>
+
+<?php include $this->getRealTemplatePath('Local/FrontendBottom') ?>
+<?php include_once $this->getRealTemplatePath('Prodamus/Popup') ?>
+
+<!-- Yandex.RTB R-A-6810960-5 -->
+<script>
+    window.yaContextCb.push(()=>{
+        Ya.Context.AdvManager.render({
+            "blockId": "R-A-6810960-5",
+            "type": "fullscreen",
+            "platform": "touch"
+        })
+    })
+</script>
+
+</body>
+</html>

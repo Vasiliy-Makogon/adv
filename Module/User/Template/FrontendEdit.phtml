@@ -1,0 +1,531 @@
+<?php
+
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\User\Model\User;
+use Krugozor\Framework\Module\User\Type\UserSex;
+use Krugozor\Framework\Module\User\Type\UserType;
+use Krugozor\Framework\Validator\StringLengthValidator;
+use Krugozor\Framework\Validator\TelegramValidator;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+/** @var User $user */
+$user = $this->getStorage()->offsetGet('user');
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Local/MetaTags')); ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'structure.css'],
+        'user' => ['frontend-edit.css'],
+    ]) ?>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.ajax.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.locations.js'); ?>
+    <?= $this->getJs('local', 'phoneinput.js') ?>
+    <?= $this->getJs() ?>
+
+</head>
+<body itemscope itemtype="https://schema.org/WebPage">
+
+<?php include $this->getRealTemplatePath('Local/FrontendTop') ?>
+
+<div id="<?= $this->getPageId() ?>" class="content">
+
+    <?php include $this->getRealTemplatePath('Common/Notification') ?>
+
+    <header>
+        <h1><a class="space_nowrap" href="/authorization/frontend-login/">Мой личный кабинет</a>
+            / Моя личная информация
+        </h1>
+    </header>
+
+    <article class="two_column">
+        <div class="left_column">
+            <div class="left_column_content">
+                <!-- left -->
+                <form method="post"
+                      action="<?= $this->getRequest()->getCanonicalRequestUri()->getEscapeUriValue() ?>">
+
+                    <?= $this->getHelper(Form::class)->getFieldError(
+                        $this->getErrors()->get('system_error')
+                    ) ?>
+
+                    <fieldset>
+                        <legend>Регистрационная информация</legend>
+                        <div class="field_row">
+                            <label class="compulsory" for="user_login">
+                                Ваш логин:
+                            </label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputText(
+                                    'user[login]',
+                                    $user->getLogin(),
+                                    [
+                                        'maxlength' => StringLengthValidator::VARCHAR_MAX_LENGTH,
+                                        'id' => 'user_login',
+                                        'autocomplete' => 'on',
+                                        'required' => 'required'
+                                    ]
+                                )->getHtml() ?>
+
+                                <div class="animate_field_description">
+                                    <div class="animate_field_content">
+                                        <div class="description_before_fields">
+                                            <p>Придумайте себе логин. Логин не то же, что и имя, а просто уникальный
+                                                идентификатор,
+                                                идентифицирующий Вас как участника. Допускается любая комбинация
+                                                символов латинского
+                                                алфавита (a—z), цифр (0—9), знака подчёркивания (_) или знака дефис
+                                                (-).
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="triangle-right-border"></div>
+                                    <div class="triangle-right"></div>
+                                </div>
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('login')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label class="compulsory" for="user_password_1">
+                                Ваш пароль:
+                            </label>
+                            <div class="group hide_show_pass_chars">
+                                <?= $this->getHelper(Form::class)->inputPassword(
+                                    'user[password_1]',
+                                    $this->getRequest()->getRequest('user.password_1', Request::SANITIZE_STRING),
+                                    [
+                                        'maxlength' => StringLengthValidator::VARCHAR_MAX_LENGTH,
+                                        'id' => 'user_password_1',
+                                        'autocomplete' => 'off'
+                                    ]
+                                )->getHtml() ?>
+
+                                <div class="animate_field_description">
+                                    <div class="animate_field_content">
+                                        <div class="description_before_fields">
+                                            <p>Придумайте себе пароль. Допускается любая комбинация символов латинского
+                                                алфавита
+                                                (a—z), цифр (0—9), знака подчёркивания (_) или знака дефис (-).</p>
+                                            <p><b>Если не хотите менять пароль, то не заполняйте это поле!</b></p>
+                                        </div>
+                                    </div>
+                                    <div class="triangle-right-border"></div>
+                                    <div class="triangle-right"></div>
+                                </div>
+                                <img title="Скрыть/показать пароль" src="/svg/local/icon-eye-close.svg">
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('password_1')
+                                ) ?>
+                            </div>
+                        </div>
+
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>Контактная информация</legend>
+
+                        <div class="field_row_fake">
+                            <div></div>
+                            <div class="group">
+                                <div class="description_before_fields description_before_fields extended_without_icon extended extended_width_80">
+                                    <p>Поля ниже лучше заполнить сейчас, чтобы в каждом новом
+                                        создаваемом Вами объявлении Ваши контактные данные подставлялись
+                                        автоматически.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label class="compulsory" for="user_email">
+                                Ваш email-адрес:
+                            </label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputEmail(
+                                    'user[email]',
+                                    ($user->getEmail() ? $user->getEmail()->getValue() : ''),
+                                    [
+                                        'maxlength' => StringLengthValidator::VARCHAR_MAX_LENGTH,
+                                        'id' => 'user_email',
+                                        'required' => 'required'
+                                    ]
+                                )->getHtml() ?>
+
+                                <div class="animate_field_description">
+                                    <div class="animate_field_content">
+                                        <div class="description_before_fields">
+                                            <p><b>Указывайте реальный email-адрес</b>, иначе в случае необходимости Вы
+                                                не сможете восстановить
+                                                забытый пароль.</p>
+                                            <p>При подаче каждого нового объявления вам будет дана возможность указать,
+                                                выводить или нет информацию из данного поля автоматически.</p>
+                                        </div>
+                                    </div>
+                                    <div class="triangle-right-border"></div>
+                                    <div class="triangle-right"></div>
+                                </div>
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('email')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="user_first_name">Ваше имя:</label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputText(
+                                    'user[first_name]',
+                                    $user->getFirstName(),
+                                    [
+                                        'maxlength' => 30,
+                                        'id' => 'user_first_name'
+                                    ]
+                                )->getHtml() ?>
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('first_name')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="user_phone">Ваш телефон:</label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputText(
+                                    'user[phone]',
+                                    $user->getPhone(),
+                                    [
+                                        'maxlength' => StringLengthValidator::VARCHAR_MAX_LENGTH,
+                                        'id' => 'user_phone',
+                                        'data-tel-input' => 'data-tel-input'
+                                    ]
+                                )->getHtml() ?>
+
+                                <div class="animate_field_description">
+                                    <div class="animate_field_content">
+                                        <div class="description_before_fields">
+                                            <p>Номер телефона в международном формате, пример: +7 (999) 111-22-33<br>
+                                                Допустимые для ввода номера: Россия, Украина, Белоруссия, Казахстан.</p>
+                                        </div>
+                                    </div>
+                                    <div class="triangle-right-border"></div>
+                                    <div class="triangle-right"></div>
+                                </div>
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('phone')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="user_url">Ваш URL-адрес:</label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputUrl(
+                                    'user[url]',
+                                    $user->getUrl()->getValue(),
+                                    [
+                                        'maxlength' => StringLengthValidator::VARCHAR_MAX_LENGTH,
+                                        'id' => 'user_url',
+                                        'autocomplete' => 'on'
+                                    ]
+                                )->getHtml() ?>
+
+                                <div class="animate_field_description">
+                                    <div class="animate_field_content">
+                                        <div class="description_before_fields">
+                                            <p>Введите адрес начиная с http:// или https://</p>
+                                        </div>
+                                    </div>
+                                    <div class="triangle-right-border"></div>
+                                    <div class="triangle-right"></div>
+                                </div>
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('url')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="user_telegram">Telegram (никнейм):</label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputText(
+                                    'user[telegram]',
+                                    $user->getTelegram(),
+                                    [
+                                        'id' => 'user_telegram',
+                                        'maxlength' => TelegramValidator::MAX_LENGTH
+                                    ]
+                                )->getHtml() ?>
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('telegram')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="user_skype">Skype:</label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputText(
+                                    'user[skype]',
+                                    $user->getSkype(),
+                                    [
+                                        'maxlength' => StringLengthValidator::MD5_MAX_LENGTH,
+                                        'id' => 'user_skype'
+                                    ]
+                                )->getHtml() ?>
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('skype')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label>Укажите территориальное местоположение объекта сделки или территориальное
+                                расположение вашей организации:</label>
+                            <div class="group">
+                                <div class="fields_wrap cities">
+                                    <p>
+                                        <span>Страна:</span>
+                                        <span id="js_country_select_wrap"></span>
+
+                                        <?= $this->getHelper(Form::class)->getFieldError(
+                                            $this->getErrors()->get('country')
+                                        ) ?>
+                                    </p>
+                                    <p>
+                                        <span>Регион:</span>
+                                        <span id="js_region_select_wrap"></span>
+
+                                        <?= $this->getHelper(Form::class)->getFieldError(
+                                            $this->getErrors()->get('region')
+                                        ) ?>
+                                    </p>
+                                    <p>
+                                        <span>Город:</span>
+                                        <span id="js_city_select_wrap"></span>
+
+                                        <?= $this->getHelper(Form::class)->getFieldError(
+                                            $this->getErrors()->get('city')
+                                        ) ?>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label class="compulsory">
+                                Тип вашего аккаунта:
+                            </label>
+                            <div class="group radiobuttons_classic">
+                                <?= $this->getHelper(Form::class)->inputHidden(
+                                    'advert[user_type]',
+                                    '',
+                                    ['id' => 'user_type']
+                                )->getHtml() ?>
+                                <?php foreach (UserType::TYPES as $type => $value): ?><?=
+                                    $this->getHelper(Form::class)->inputRadio(
+                                        'user[user_type]',
+                                        $type,
+                                        $user->getType()->getValue(),
+                                        ['id' => 'user_type_' . $type]
+                                    )->getHtml() ?><?=
+                                    $this->getHelper(Form::class)->label(
+                                        $value,
+                                        'user_type_' . $type
+                                    )->getHtml() ?><?php
+                                endforeach; ?>
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('type')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="user_contact">Дополнительные данные (для компаний).<br>
+                                Будут отображаться в каждом вашем объявлении
+                                и в вашем <a target="_blank" href="/help/b2b">публичном профиле</a>:</label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputTextArea(
+                                    'user[contact]',
+                                    $user->getContact(),
+                                    ['id' => 'user_contact']
+                                )->getHtml() ?>
+
+                                <div class="animate_field_description">
+                                    <div class="animate_field_content">
+                                        <div class="description_before_fields">
+                                            <p>Укажите в данном поле адрес, график работы
+                                                или иную информацию для ваших клиентов.</p>
+                                            <p>При подаче каждого нового объявления вам будет дана возможность указать,
+                                                выводить или нет информацию из данного поля автоматически.</p>
+                                        </div>
+                                    </div>
+                                    <div class="triangle-right-border"></div>
+                                    <div class="triangle-right"></div>
+                                </div>
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('contact')
+                                ) ?>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>Если не секрет..</legend>
+
+                        <div class="field_row">
+                            <label>Ваш пол:</label>
+                            <div class="group radiobuttons_classic">
+                                <?php foreach (UserSex::TYPES as $sex_key => $sex_value): ?><?=
+                                    $this->getHelper(Form::class)->inputRadio(
+                                        'user[sex]',
+                                        $sex_key,
+                                        $user->getSex()->getValue(),
+                                        ['id' => 'user_sex_' . $sex_key]
+                                    )->getHtml() ?><?=
+                                    $this->getHelper(Form::class)->label(
+                                        $sex_value,
+                                        'user_sex_' . $sex_key
+                                    )->getHtml() ?><?php
+                                endforeach; ?>
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('sex')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label>Ваш день рождения:</label>
+                            <div class="group">
+                                <div class="fields_wrap">
+                                    <?= $this->getHelper(Form::class)->inputSelectIntegerValues(
+                                        'user[age_day]', 1, 32,
+                                        $user->getAgeDay()
+                                    )->getHtml() ?><?php
+                                    $select = $this->getHelper(Form::class)->inputSelect(
+                                        'user[age_month]',
+                                        $user->getAgeMonth()
+                                    );
+                                    $select->addOption($this->getHelper(Form::class)->inputOption(0, 'Выберите'));
+
+                                    foreach ($this->getLang()->get('content.date.months_genitive') as $key => $value):
+                                        $select->addOption($this->getHelper(Form::class)->inputOption($key, $value));
+                                    endforeach;
+                                    ?><?= $select->getHtml(); ?><?= $this->getHelper(Form::class)->inputSelectYears(
+                                        'user[age_year]',
+                                        $user->getAgeYear()
+                                    )->getHtml() ?><?= $this->getHelper(Form::class)->getFieldError(
+                                        $this->getErrors()->get('age_day')
+                                    ) ?>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <?= $this->getHelper(Form::class)->inputHidden(
+                        'user[id]',
+                        $user->getId()
+                    )->getHtml() ?>
+
+                    <?= $this->getHelper(Form::class)->inputSubmit(
+                        'submit',
+                        'Сохранить мои данные',
+                        ['class' => 'big_button button_margin_auto']
+                    )->getHtml() ?>
+
+                </form>
+                <!-- /left -->
+            </div>
+        </div>
+        <div class="right_column">
+            <div class="right_column_content">
+                <!-- right -->
+
+                <!-- Yandex.RTB R-A-6810960-1 -->
+                <div class="subblock" id="yandex_rtb_R-A-6810960-1"></div>
+                <script>
+                    window.yaContextCb.push(()=>{
+                        Ya.Context.AdvManager.render({
+                            "blockId": "R-A-6810960-1",
+                            "renderTo": "yandex_rtb_R-A-6810960-1"
+                        })
+                    })
+                </script>
+
+                <!-- Yandex.RTB R-A-6810960-2 -->
+                <div class="subblock" id="yandex_rtb_R-A-6810960-2"></div>
+                <script>
+                    window.yaContextCb.push(()=>{
+                        Ya.Context.AdvManager.render({
+                            "blockId": "R-A-6810960-2",
+                            "renderTo": "yandex_rtb_R-A-6810960-2"
+                        })
+                    })
+                </script>
+
+                <!-- /right -->
+            </div>
+        </div>
+    </article>
+
+</div> <!-- / Content -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        Krugozor.Location.addCheckedUserLocation(1, '<?=$user->getCountry()?>');
+        Krugozor.Location.addCheckedUserLocation(2, '<?=$user->getRegion()?>');
+        Krugozor.Location.addCheckedUserLocation(3, '<?=$user->getCity()?>');
+
+        var select_country_attributes = {
+            name: 'user[country]',
+            value: '<?=$user->getCountry()?>'
+        };
+        var selectCountryObj = Krugozor.Location.createLocation(select_country_attributes, 'Выберите страну проживания');
+        document.getElementById('js_country_select_wrap').appendChild(selectCountryObj.SelectElement);
+
+        var select_region_attributes = {
+            name: 'user[region]',
+            value: '<?=$user->getRegion()?>'
+        };
+        var selectRegionObj = Krugozor.Location.createLocation(select_region_attributes, 'Выберите регион проживания');
+        document.getElementById('js_region_select_wrap').appendChild(selectRegionObj.SelectElement);
+
+        var select_city_attributes = {
+            name: 'user[city]',
+            value: '<?=$user->getCity()?>'
+        };
+        var selectCityObj = Krugozor.Location.createLocation(select_city_attributes, 'Выберите город проживания');
+        document.getElementById('js_city_select_wrap').appendChild(selectCityObj.SelectElement);
+
+        selectCountryObj.create(1, 0);
+        selectRegionObj.create(2, <?=(int) $user->getCountry()?>);
+        selectCityObj.create(3, <?=(int) $user->getRegion()?>);
+    });
+</script>
+
+<?php include $this->getRealTemplatePath('Local/FrontendBottom') ?>
+
+</body>
+</html>

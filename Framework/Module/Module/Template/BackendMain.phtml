@@ -1,0 +1,145 @@
+<?php
+
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Helper\SortLink;
+use Krugozor\Framework\Module\Module\Model\Module;
+use Krugozor\Framework\Module\Module\Service\ModuleListService;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+/** @var ModuleListService $moduleListService */
+$moduleListService = $this->getStorage()->get('moduleListService');
+
+$moduleListService
+    ->getPagination()
+    ->getHelper()
+    ->setCssNormalLinkClass('navigation_normal_link')
+    ->setRequestUriParameter('field_name', $moduleListService->getAlias())
+    ->setRequestUriParameter('sort_order', $moduleListService->getOrder());
+$pagination = $moduleListService->getPagination();
+
+$sortLink = new SortLink();
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+        'module' => ['backend-main.css'],
+    ]) ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+<menu class="main">
+    <li><a href="/module/edit-module/">Добавление модуля</a></li>
+</menu>
+
+<table class="datatable">
+    <thead>
+    <tr>
+        <th colspan="6">Список модулей</th>
+    </tr>
+    <tr>
+        <th>
+            <?php
+            echo $sortLink->setFieldName('id')
+                ->setAnchor($this->getLang()->get('content.id'))
+                ->setUrl($this->getRequest()->getCanonicalRequestUri()->getEscapeUriValue())
+                ->setIconSrc('/img/local/system/icon/')
+                ->setCurrentFieldName($moduleListService->getAlias())
+                ->setCurrentSortOrder($moduleListService->getOrder())
+                ->setQueryStringFromArray([
+                    'sep' => $moduleListService->getPagination()->getCurrentSeparator(),
+                    'page' => $moduleListService->getPagination()->getCurrentPage(),
+                ])
+                ->getHtml();
+            ?>
+        </th>
+        <th>
+            <?php
+            echo $sortLink->setFieldName('name')
+                ->setAnchor('Имя модуля')
+                ->getHtml();
+            ?>
+        </th>
+        <th>
+            <?php
+            echo $sortLink->setFieldName('key')
+                ->setAnchor('Ключ модуля')
+                ->getHtml();
+            ?>
+        </th>
+        <th>Количество контроллеров</th>
+        <th colspan="2"><?= $this->getLang()->get('content.actions') ?></th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php if ($moduleListService->getList()->count()): ?>
+
+        <?php
+        /** @var Module $module */
+        foreach ($moduleListService->getList()->getDataAsArray() as ['module' => $module]): ?>
+            <tr>
+                <td>
+                    <?= $module->getId() ?>
+                </td>
+                <td>
+                    <a href="/module/edit-module/?id=<?= $module->getId() ?>">
+                        <?= Format::hsc($module->getName()) ?>
+                    </a>
+                </td>
+                <td>
+                    <?= Format::hsc($module->getKey()) ?>
+                </td>
+                <td>
+                    <?php if ($module->getControllersList()): ?>
+                        <?= $module->getControllersList()->count() ?>
+                        <?= Format::triumviratForm(
+                            $module->getControllersList()->count(),
+                            $this->getLang()->get('content.triumvirat_controllers')
+                        ) ?>
+                    <?php else: ?>
+                        контроллеров нет
+                    <?php endif; ?>
+                </td>
+                <td>
+                    <a href="/module/edit-module/?id=<?= $module->getId() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>">
+                        <img src="/img/local/system/icon/edit.png" alt="">
+                    </a>
+                </td>
+                <td>
+                    <?php
+                    $str = Format::js(
+                        $this->getLang()->get('content.question_delete_module'),
+                        ['module_name' => $module->getName(), 'module_id' => $module->getId()]
+                    );
+                    ?>
+                    <a onclick='return confirm(<?= $str ?>)'
+                       href="/module/delete-module/?id=<?= $module->getId() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>">
+                        <img src="/img/local/system/icon/delete.png" alt="">
+                    </a>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+
+    <?php else: ?>
+        <tr>
+            <td><?= $this->getLang()->get('content.not_found_request_data') ?></td>
+        </tr>
+    <?php endif; ?>
+    </tbody>
+</table>
+
+<?php include $this->getRealTemplatePath('Common/Navigation') ?>
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

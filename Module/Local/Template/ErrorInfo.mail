@@ -1,0 +1,24 @@
+Ошибка в <?=$this->file?> на <?=$this->line?>:
+
+IP:
+    <?=$this->ip?>
+
+
+MESSAGE:
+    <?=$this->message?>
+
+
+URI:
+    <?=$this->uri?>
+
+
+DATE:
+    <?=$this->date?->formatAsMysqlDatetime()?>
+
+
+TRACE:
+    <?=$this->trace?>
+
+
+Пожалуйста, не отвечайте на это письмо, т.к. оно сгенерировано роботом.
+С уважением, администрация сервера <?=$this->host?>

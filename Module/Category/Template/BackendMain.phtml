@@ -1,0 +1,68 @@
+<?php
+
+use Krugozor\Cover\CoverArray;
+use Krugozor\Framework\Module\Category\Helper\AllCategoryRenderingHelper;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+$treeBackendTableHelper = new AllCategoryRenderingHelper($this);
+
+/** @var CoverArray $categories */
+$categories = $this->getStorage()->offsetGet('categories');
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+        'category' => ['backend-main.css'],
+    ]) ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+<menu class="main">
+    <li><a href="/category/backend-edit/">Добавление категории</a></li>
+</menu>
+
+<table class="datatable">
+    <thead>
+    <tr>
+        <th colspan="12">Список категорий</th>
+    </tr>
+    <tr>
+        <th>ID</th>
+        <th>Платная</th>
+        <th>Уровень</th>
+        <th>Услуга</th>
+        <th>Имя категории</th>
+        <th>URL категории</th>
+        <th colspan="6">
+            <?= $this->getLang()->get('content.actions') ?>
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php if ($categories->count()): ?>
+        <?= $treeBackendTableHelper->getHtml() ?>
+    <?php else: ?>
+        <tr>
+            <td colspan="7">
+                <?= $this->getLang()->get('content.not_found_request_data') ?>
+            </td>
+        </tr>
+    <?php endif; ?>
+    </tbody>
+</table>
+
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

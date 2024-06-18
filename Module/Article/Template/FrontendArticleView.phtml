@@ -1,0 +1,92 @@
+<?php
+
+use Krugozor\Cover\CoverArray;
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Module\Article\Model\Article;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+/** @var Article $article */
+$article = $this->getStorage()->get('article');
+
+$this->getLang()->get('meta')->replaceParams('description', [
+    'article_text' => Format::description($article->getText())
+]);
+$this->getLang()->get('meta')->replaceParams('keywords', [
+    'article_header' => Format::description($article->getHeader())
+]);
+$this->getLang()->get('title')->replaceParams(0, [
+    'article_header' => Format::description($article->getHeader())
+]);
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Local/MetaTags')) ?>
+
+    <?= $this->getJs('local', 'onselectstart.js') ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'structure.css'],
+        'help' => ['help.css'],
+    ]) ?>
+
+</head>
+<body itemscope itemtype="https://schema.org/WebPage">
+
+<?php include $this->getRealTemplatePath('Local/FrontendTop') ?>
+
+<div class="content">
+
+    <?php include $this->getRealTemplatePath('Common/Notification') ?>
+
+    <header>
+        <nav itemprop="breadcrumb" itemscope itemtype="https://schema.org/BreadcrumbList">
+                    <span itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                        <a itemprop="item" href="/articles/">
+                            <span itemprop="name">Статьи</span>
+                            <meta itemprop="position" content="1">
+                        </a>
+                    </span> /
+            <h1>
+                        <span itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                            <span itemprop="name"><?= Format::outPut($article->getHeader()) ?></span>
+                            <meta itemprop="position" content="2">
+                        </span>
+            </h1>
+        </nav>
+    </header>
+
+    <?php if ($article->getIsHtml()): ?>
+        <?= $article->getText() ?>
+    <?php else: ?>
+        <p><?= (CoverArray::fromExplode(PHP_EOL, $article->getText()))
+                ->map(fn(string $value): string => trim($value))
+                ->filter()
+                ->implode("</p>\n<p>");
+            ?></p>
+    <?php endif; ?>
+
+    <?php if ($article->getEditDate()): ?>
+        <p>
+            <time datetime="<?= $article->getEditDate()->format(DateTimeInterface::ATOM) ?>">
+                <?= $article->getEditDate()->formatDateForPeople() ?>
+            </time>
+        </p>
+    <?php else: ?>
+        <p>
+            <time datetime="<?= $article->getCreateDate()->format(DateTimeInterface::ATOM) ?>"
+            ><?= $article->getCreateDate()->formatDateForPeople() ?></time>
+        </p>
+    <?php endif; ?>
+
+</div>
+
+<?php include $this->getRealTemplatePath('Local/FrontendBottom') ?>
+<?php include $this->getRealTemplatePath('Prodamus/Popup') ?>
+
+</body>
+</html>

@@ -1,0 +1,61 @@
+<?php
+/* @var $this View */
+
+use Krugozor\Framework\Registry;
+use Krugozor\Framework\View;
+
+?>
+<footer>
+    <div class="two_column">
+        <div class="left_column">
+            <div class="left_column_content">
+                <ul>
+                    <li><?= Registry::getInstance()->get('HOSTINFO.DOMAIN_AS_TEXT') ?> 2009&mdash;<?= date('Y') ?></li>
+                </ul>
+            </div>
+        </div>
+        <div class="right_column">
+            <div class="right_column_content">
+                <!--noindex-->
+                <ul>
+                    <li><a href="/help/terms_of_service/" rel="nofollow">Соглашение об условиях использования сайта</a></li>
+                    <li><a href="/help/oferta/" rel="nofollow">Публичная оферта</a></li>
+                    <li><a href="/help/privacy/" rel="nofollow">Политика в отношении обработки персональных данных</a></li>
+                    <li><strong><a href="/help/contact/" rel="nofollow">Обратная связь</a></strong></li>
+                </ul>
+                <!--/noindex-->
+                <ul>
+                    <li><a href="/help/faq/">Вопросы и ответы</a></li>
+                    <li><a href="/help/site-map/">Карта сайта</a></li>
+                    <li><a href="/help/poleznye_sovety/">Советы по размещению объявлений</a></li>
+                    <li><a href="/articles/">Полезные статьи</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <ul class="counters">
+        <li>
+            <!-- Top.Mail.Ru logo -->
+            <a href="https://top-fwz1.mail.ru/jump?from=3497547">
+                <img src="https://top-fwz1.mail.ru/counter?id=3497547;t=501;l=1" alt="Top.Mail.Ru"></a>
+            <!-- /Top.Mail.Ru logo -->
+        </li>
+        <li>
+            <!--LiveInternet counter--><a href="https://www.liveinternet.ru/click"
+                                          target="_blank"><img id="licnt60CB"
+                                                               title="LiveInternet: показано число просмотров за 24 часа, посетителей за 24 часа и за сегодня"
+                                                               src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                                                               alt="liveinternet"></a><script>(function(d,s){d.getElementById("licnt60CB").src=
+                    "https://counter.yadro.ru/hit?t16.11;r"+escape(d.referrer)+
+                    ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                        (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                    ";h"+escape(d.title.substring(0,150))+";"+Math.random()})
+                (document,screen)</script><!--/LiveInternet-->
+        </li>
+    </ul>
+</footer>
+
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</div> <!-- /end wrap -->

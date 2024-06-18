@@ -1,0 +1,252 @@
+<?php
+
+use Krugozor\Cover\CoverArray;
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Helper\SortLink;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Advert\Service\FrontendUserAdvertsListService;
+use Krugozor\Framework\Module\Category\Helper\OptionsListWithOptgroup;
+use Krugozor\Framework\Module\User\Model\User;
+use Krugozor\Framework\Module\User\Type\UserType;
+use Krugozor\Framework\Registry;
+use Krugozor\Framework\Statical\Strings;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+$searchCategory = $this->getRequest()->getRequest('category', Request::SANITIZE_INT);
+$searchKeyword = $this->getRequest()->getRequest('keyword', Request::SANITIZE_STRING_FULLTEXT);
+
+/** @var User $user */
+$user = $this->getStorage()->get('user');
+
+/** @var FrontendUserAdvertsListService $advertsListService */
+$advertsListService = $this->getStorage()->get('advertsListService');
+
+$advertsListService
+    ->getPagination()
+    ->getHelper()
+    ->setRequestUriParameter('field_name', $advertsListService->getAlias())
+    ->setRequestUriParameter('sort_order', $advertsListService->getOrder())
+    ->setRequestUriParameter('category', $searchCategory)
+    ->setRequestUriParameter('keyword', $searchKeyword)
+    ->setCssNormalLinkClass('navigation_normal_link')
+    ->setCssActiveLinkClass('navigation_open_link');
+$pagination = $advertsListService->getPagination();
+
+/** @var CoverArray $userCategories */
+$userCategories = $this->getStorage()->get('userCategories');
+
+$this->getLang()->get('title')->replaceParams(0, [
+    'user' => $user->getFullName(),
+    'site' => ucfirst(Registry::getInstance()->get('HOSTINFO.DOMAIN_AS_TEXT'))
+]);
+
+// Для Яндекса, что бы не ругался на одинаковые title
+if (($page = $pagination->getCurrentPage()) > 1) {
+    $this->getLang()->get('title')->addPostfix(0, Strings::createMessageFromParams(
+        $this->getLang()->get('content.page_number'), ['page' => $page]
+    ));
+}
+
+$sortLink = new SortLink();
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Local/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'structure.css'],
+        'advert' => ['_adverts-list.css', 'frontend-user-adverts-list.css', 'frontend-user-public-adverts-list.css',],
+    ]) ?>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+    <?= $this->getJs('advert', '_adverts-list.js') ?>
+    <?= $this->getJs('advert', 'frontend-category-list.js') ?>
+    <?= $this->getJs() ?>
+
+</head>
+<body itemscope itemtype="https://schema.org/WebPage">
+
+<?php include $this->getRealTemplatePath('Local/FrontendTop') ?>
+
+<div class="content">
+
+    <?php include $this->getRealTemplatePath('Common/Notification') ?>
+
+    <header>
+        <h1>
+            <?php if ($user->getFullName()): ?>
+                <?= $user->getFullName() ?>
+            <?php else: ?>
+                Профиль пользователя #<?= $user->getId() ?>
+            <?php endif; ?>
+
+            <?php if ($user->getType()->getValue()): ?> (<?= $user->getType()->getAsText() ?>)<?php endif; ?>
+        </h1>
+
+        <?php if ($user->getContact()): ?>
+            <p><?= Format::hsc($user->getContact()) ?></p>
+        <?php endif; ?>
+
+        <ul>
+            <?php if ($user->getFullName() && $user->getType()->getValue() !== UserType::TYPE_PRIVATE_PERSON): ?>
+                <li>Контактное лицо:&nbsp;<?= Format::hsc($user->getFullName()) ?></li>
+            <?php endif; ?>
+
+            <?php if ($user->getPhone()): ?>
+                <li>Телефон:&nbsp;<?= Format::hsc($user->getPhone()) ?></li>
+            <?php endif; ?>
+
+            <?php if ($user->getEmail()->getValue()): ?>
+                <li>Email-адрес:&nbsp;<a rel="nofollow"
+                    href="mailto:<?= Format::hsc($user->getEmail()->getValue()) ?>"
+                    ><?= Format::hsc($user->getEmail()->getValue()) ?></a>
+                </li>
+            <?php endif; ?>
+
+            <?php if ($user->getUrl()->getValue()): ?>
+                <li>Веб-сайт:&nbsp;<span data-url="<?= $user->getUrl()->getValue() ?>"
+                 class="imitation_link js-imitation-link"><?= $user->getUrl()->getValue() ?></span>
+                </li>
+            <?php endif; ?>
+
+            <?php if ($user->getTelegram()): ?>
+                <li>Telegram:&nbsp;<a
+                    rel="nofollow"
+                    href="https://t.me/<?= $user->getTelegram() ?>"><?= $user->getTelegram() ?></a>
+                </li>
+            <?php endif; ?>
+
+            <?php if ($user->getSkype()): ?>
+                <li>Skype:&nbsp;<a
+                            rel="nofollow"
+                            href="skype:<?= $user->getSkype() ?>?call"><?= $user->getSkype() ?></a>
+                </li>
+            <?php endif; ?>
+
+        </ul>
+    </header>
+
+    <div class="subblock filter">
+        <div class="two_column">
+            <div class="left_column">
+                <div class="left_column_content">
+                    <div class="bheader add_header_icon add_category_search_icon">Фильтр по предложениям:</div>
+                    <form method="get"
+                          action="<?= $this->getRequest()->getCanonicalRequestUri()->getEscapeUriValue() ?>">
+                        <div class="field_row">
+                            <label for="input_category">Поиск:</label>
+                            <div class="group">
+                                <?php
+                                $select = $this->getHelper(Form::class)->inputSelect(
+                                    'category',
+                                    $searchCategory,
+                                    ['id' => 'input_category']
+                                );
+                                $select->addOption($this->getHelper(Form::class)->inputOption('', 'Категория'));
+                                foreach ((new OptionsListWithOptgroup($userCategories))->getOptions() as $option):
+                                    $select->addOption($option);
+                                endforeach;
+                                echo $select->getHtml();
+                                ?>
+
+                                <label for="input_keyword">Поиск по слову:</label>
+                                <?= $this->getHelper(Form::class)->inputText(
+                                    'keyword',
+                                    $searchKeyword,
+                                    ['maxlength' => 50, 'id' => 'input_keyword']
+                                )->getHtml() ?>
+                                <input type="submit" value="Поиск">
+                                <input class="js_reset_button" type="reset" value="Сбросить">
+                            </div>
+                        </div>
+                        <div class="field_row">
+                            <label>Сортировать по:</label>
+                            <div class="group">
+                                <ul class="user_advert_order_menu">
+                                    <li>
+                                        <?php
+                                        echo $sortLink
+                                            ->setFieldName('header')
+                                            ->setAnchor('Заголовку')
+                                            ->setUrl($this->getRequest()->getCanonicalRequestUri()->getEscapeUriValue())
+                                            ->setIconSrc('/img/local/system/icon/')
+                                            ->setCurrentFieldName($advertsListService->getAlias())
+                                            ->setCurrentSortOrder($advertsListService->getOrder())
+                                            ->setQueryStringFromArray([
+                                                'sep' => $advertsListService->getPagination()->getCurrentSeparator(),
+                                                'page' => $advertsListService->getPagination()->getCurrentPage(),
+                                                'category' => $searchCategory,
+                                                'keyword' => $searchKeyword
+                                            ])
+                                            ->getHtml();
+                                        ?>
+                                    </li>
+                                    <li>
+                                        <?php
+                                        echo $sortLink
+                                            ->setFieldName('price')
+                                            ->setAnchor('Цене')
+                                            ->getHtml();
+                                        ?>
+                                    </li>
+                                    <li>
+                                        <?php
+                                        echo $sortLink
+                                            ->setFieldName('advert_create_date')
+                                            ->setAnchor('Дате создания')
+                                            ->getHtml();
+                                        ?>
+                                    </li>
+                                    <li>
+                                        <?php
+                                        echo $sortLink
+                                            ->setFieldName('balance')
+                                            ->setAnchor('По кол-ву в наличии')
+                                            ->getHtml();
+                                        ?>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!--<div class="right_column">
+                <div class="right_column_content">
+
+                </div>
+            </div>-->
+        </div>
+    </div>
+
+    <?php if ($advertsListService->getList()->count()): ?>
+        <ul class="advert_list advert_list_shop_33 advert_list_shop_20">
+            <?php
+            $view = new View($this->getRealTemplatePath('Advert/AdvertsList'));
+            $view->getStorage()->offsetSet('advertsList', $advertsListService->getList());
+            $view->setCurrentUser($this->getCurrentUser());
+            $view->getStorage()->offsetSet('isFrontendUserPublicAdvertsListController', true);
+            $view->run();
+            echo $view->getOutput();
+            ?>
+        </ul>
+    <?php else: ?>
+        <p>Вы еще не создали ни одного объявления.</p>
+        <p>Для создания объявления <a href="/advert/frontend-edit-advert/">пройдите по этой ссылке</a>.</p>
+    <?php endif; ?>
+
+    <?php include $this->getRealTemplatePath('Advert/FrontendNavigation'); ?>
+</div>
+
+<?php include $this->getRealTemplatePath('Local/FrontendBottom') ?>
+<?php include_once $this->getRealTemplatePath('Prodamus/Popup') ?>
+
+</body>
+</html>

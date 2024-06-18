@@ -1,0 +1,678 @@
+.advert_list {
+    margin:0;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    /* Флексы равномерно распределяются по всей строке. Первый и последний элемент прижимаются к соответствующим краям контейнера. */
+    justify-content: flex-start;
+    /* Флексы растягиваются таким образом, чтобы занять всё доступное пространство контейнера (по высоте). */
+    align-items: stretch;
+    /* Задаёт тип выравнивания строк внутри флекс-контейнера по поперечной оси при наличии свободного пространства. */
+    align-content: stretch;
+    flex-wrap: wrap;
+}
+
+.advert_list > li {
+    /* Основа блока. Является начальным (базовым) размером элемента. */
+    flex-basis: 100%;
+    /* Определяет, сколько пространства может занимать флекс внутри контейнера.
+    В качестве значения принимаются числа, они задают пропорции каждого флекса.
+    К примеру, если для всех элементов установлено значение 1, то они получатся равного размера.
+    Если какой-то элемент получил значение 2, то его размер будет в два раза больше остальных. */
+    flex-grow: 0;
+    /* Коэффициент сжатия блоков в контейнере.
+    Указывает степень уменьшения по отношению к другим блокам, для размещения блоков в одну строку. */
+    flex-shrink: 1;
+    display: flex; /* контейнер заполнится по всей высоте тега li */
+    list-style-type: none;
+    padding: 1px;
+    max-width: 100%;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    overflow: hidden;
+}
+.advert_list.advert_list_shop_33 > li {
+    max-width: 33.3%;
+    flex-basis: 33.3%;
+}
+.advert_list.advert_list_shop_25 > li {
+    max-width: 25%;
+    flex-basis: 25%;
+}
+.advert_list.advert_list_shop_20 > li {
+    max-width: 20%;
+    flex-basis: 20%;
+}
+
+/* todo: потом условия ниже до ума довести */
+@media screen and (max-width: 1000px) {
+    .advert_list.advert_list_shop_33 > li {
+        max-width: 50%;
+        flex-basis: 50%;
+    }
+}
+@media screen and (min-width: 1000px) {
+    .advert_list.advert_list_special > li:where(:not(:last-child)) {
+        padding: 0;
+        margin-bottom: 5px;
+    }
+}
+@media screen and (max-width: 1000px) {
+    .advert_list.advert_list_special > li {
+        flex-basis: 50%;
+        max-width: 50%;
+    }
+}
+@media screen and (max-width: 780px) {
+    .advert_list > li {
+        flex-basis: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+
+
+
+.advert_list > li > .advert {
+    background-color: var(--advert-bg-color);
+    border: 1px solid #CCC;
+    border-radius: var(--border-radius-common);
+    width:100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+}
+.advert_list > li > .advert:hover {
+    border-color:#999;
+}
+.advert_list > li > .advert.vip {
+    background-color: var(--advert-vip-bg-color);
+}
+.advert_list > li > .advert.vip:hover {
+    border-color:#cc0000;
+}
+
+.advert_list > li > .advert > article {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    /* Флексы равномерно распределяются по всей строке. Первый и последний элемент прижимаются к соответствующим краям контейнера. */
+    justify-content: space-between;
+    /* Флексы растягиваются таким образом, чтобы занять всё доступное пространство контейнера (по высоте). */
+    align-items: stretch;
+    /* Задаёт тип выравнивания строк внутри флекс-контейнера по поперечной оси при наличии свободного пространства. */
+    align-content: stretch;
+    flex-wrap: nowrap;
+    padding:5px;
+    min-height: 86px;
+    position: relative;
+}
+/* shop > 1000 */
+@media screen and (min-width: 1001px) {
+    .advert_list.advert_list_shop_33 > li > .advert > article {
+        flex-wrap: wrap;
+    }
+}
+@media screen and (min-width: 1000px) {
+    .advert_list.advert_list_special > li > .advert > article {
+        flex-wrap: wrap;
+        padding: 0;
+    }
+}
+
+
+.advert_list > li > .advert > article > .left_column,
+.advert_list > li > .advert > article > .right_column {
+    text-align: left;
+    /* Основа блока. Является начальным (базовым) размером элемента.
+    Возможно указывать размер в следующих единицах измерения: px, em, %, mm, pt и т.д.. */
+    flex-basis: auto;
+    /* Определяет, сколько пространства может занимать флекс внутри контейнера.
+    В качестве значения принимаются числа, они задают пропорции каждого флекса.
+    К примеру, если для всех элементов установлено значение 1, то они получатся равного размера.
+    Если какой-то элемент получил значение 2, то его размер будет в два раза больше остальных. */
+    flex-grow: 0;
+    /* Коэффициент сжатия блоков в контейнере.
+    Указывает степень уменьшения по отношению к другим блокам, для размещения блоков в одну строку. */
+    flex-shrink: 1;
+    /* Свойство CSS align-self выравнивает flex-элементы по текущей flex-линии, переопределяя значение свойства align-items. */
+    align-self: auto;
+}
+.advert_list > li > .advert > article > .left_column{
+    order: 1;
+}
+@media screen and (min-width: 1000px) {
+    .advert_list.advert_list_shop_33 > li > .advert > article > .left_column {
+        flex-grow: 1;
+    }
+}
+@media screen and (min-width: 1000px) {
+    .advert_list.advert_list_special > li > .advert > article > .left_column {
+        flex-basis: 298px;
+    }
+}
+.advert_list > li > .advert > article > .left_column > .left_column_content {
+    position: relative;
+}
+
+/* Размер контейнера изображения */
+.advert_list > li > .advert > article > .left_column > .left_column_content > div {
+    overflow: hidden;
+    width: var(--image-medium-width-for-precent-25);
+    height: var(--image-medium-height-for-precent-25);
+    outline: 1px solid #CCCCCC;
+    display: block;
+    transition: all 0.3s;
+    border-radius: var(--border-radius-common);
+}
+@media screen and (max-width: 690px) {
+    .advert_list > li > .advert > article > .left_column > .left_column_content > div {
+        width: var(--image-small-width) !important;
+        height: var(--image-small-height) !important;
+    }
+}
+.advert_list.advert_list_shop_33 > li > .advert > article > .left_column > .left_column_content > div {
+    width: 100%;
+    height: var(--image-medium-height-for-precent-33);
+    /*outline: 3px solid red;*/
+}
+@media screen and (max-width: 1000px) {
+    .advert_list.advert_list_shop_33 > li > .advert > article > .left_column > .left_column_content > div {
+        width: var(--image-medium-width-for-precent-33);
+        height: var(--image-medium-height-for-precent-33);
+    }
+}
+.advert_list.advert_list_shop_25 > li > .advert > article > .left_column > .left_column_content > div {
+    width: 100%;
+    height: var(--image-medium-height-for-precent-25);
+    /*outline: 3px solid green;*/
+}
+@media screen and (max-width: 1000px) {
+    .advert_list.advert_list_shop_25 > li > .advert > article > .left_column > .left_column_content > div {
+        width: var(--image-medium-width-for-precent-25);
+        height: var(--image-medium-height-for-precent-25);
+    }
+}
+.advert_list.advert_view > li > .advert > article > .left_column > .left_column_content > div {
+    width: var(--image-small-width);
+    height: var(--image-small-height);
+    /*outline: 3px solid aqua;*/
+}
+@media screen and (min-width: 1000px) {
+    .advert_list.advert_list_special > li > .advert > article > .left_column > .left_column_content > div {
+        width: 100%;
+        height: 225px;
+        outline: none;
+        border-bottom: 1px solid #ccc;
+    }
+}
+.advert_list > li > .advert > article > .left_column > .left_column_content > div.no_photo {
+    /* https://www.svgrepo.com/svg/52127/no-photo */
+    background: url(/svg/local/no_photo.svg) no-repeat scroll center center transparent !important;
+}
+
+.advert_list > li > .advert > article > .left_column > .left_column_content > div > a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    color:transparent;
+    transition: all 0.3s;
+    border-radius: var(--border-radius-common);
+}
+div.advert:hover > article.two_column > .left_column > .left_column_content > div {
+    outline: 1px solid #999;
+}
+.advert_list > li > .advert > article > .left_column > .left_column_content > div > a > img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    position: absolute;
+    top:0;
+    left:0;
+    margin: auto;
+}
+.advert_list.advert_list_special > li > .advert > article > .left_column > .left_column_content > div > a > img{
+    object-fit:cover;
+    object-position: 0 0;
+}
+@media screen and (max-width: 1000px) {
+    .advert_list.advert_list_special > li > .advert > article > .left_column > .left_column_content > div > a > img{
+        object-fit:cover;
+    }
+}
+.advert_list > li > .advert > article > .left_column > .left_column_content > div > a > span{
+    background: none no-repeat scroll 0 0 rgba(0, 0, 0, 0.6);
+    border-radius: var(--border-radius-common);
+    bottom: 3px;
+    color: white;
+    left: 3px;
+    line-height: 17px;
+    padding: 0 3px;
+    position: absolute;
+}
+.advert_list > li > .advert > article > .left_column > .left_column_content > div > a > span > span {
+    /* https://freesvg.org/camera-symbol */
+    background: url(/svg/local/icon-15-camera.svg) no-repeat scroll left center transparent;
+    display: inline-block;
+    padding-left: 18px;
+    font-size: 90%;
+}
+
+.advert_list > li > .advert > article > .right_column {
+    order: 2;
+    flex-grow: 1;
+}
+.advert_list > li > .advert > article > .right_column > .right_column_content {
+    padding: 0 0 0 5px;
+}
+@media screen and (min-width: 1001px) {
+    .advert_list.advert_list_shop_33 > li > .advert > article > .right_column > .right_column_content {
+        padding: 5px 0 0 0;
+    }
+    .advert_list.advert_list_special > li > .advert > article > .right_column > .right_column_content {
+        padding:5px;
+    }
+}
+
+.advert_list > li > .advert > article > .right_column > .right_column_content > span.price {
+    font-size: var(--font-size-13);
+    background-color: #FFF;
+    border-bottom: 1px solid #ccc;
+    border-left: 1px solid #ccc;
+    color: #333;
+    border-bottom-left-radius: var(--border-radius-common);
+    border-top-right-radius: var(--border-radius-common);
+    float:right;
+    padding:5px;
+    float: none;
+    position:absolute;
+    top:0;
+    right:0;
+    margin:0;
+}
+@media screen and (max-width: 1000px) {
+    .advert_list:where(:not(.advert_view)) > li > .advert > article > .right_column > .right_column_content > span.price {
+        position: static;
+        float:right;
+        margin:-5px -5px 0 5px;
+    }
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > span.price {
+    float:right;
+    position: static;
+}
+@media screen and (max-width: 780px) {
+    .advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > span.price {
+        position:absolute;
+        top:0;
+        right:0;
+        margin:0;
+    }
+}
+
+.advert_list > li > .advert > article > .right_column > .right_column_content > header {
+    /* Убираем унаследованное */
+    padding: 0;
+    background: none;
+    word-break: break-word;
+}
+.advert_list:where(:not(.advert_view)) > li > .advert > article > .right_column > .right_column_content > header {
+    margin:0 0 5px 0;
+}
+.advert_list > li > .advert > article > .right_column > .right_column_content > header > h3 {
+    font-size: var(--font-size-13);
+    font-weight: bold;
+}
+@media screen and (min-width: 1000px) {
+    .advert_list.advert_list_special > li > .advert > article > .right_column > .right_column_content > header > h3 {
+        font-size: var(--font-size-14);
+    }
+}
+.advert_list > li > .advert > article > .right_column > .right_column_content > header > h3 > a {
+    display: block;
+    text-decoration: none;
+}
+.advert_list > li > .advert.vip > article > .right_column > .right_column_content > header > h3 a,
+.advert_list > li > .advert.vip > article > .right_column > .right_column_content > header > h3 a:active,
+.advert_list > li > .advert.vip > article > .right_column > .right_column_content > header > h3 a:hover,
+.advert_list > li > .advert.vip > article > .right_column > .right_column_content > header > h3 a:visited {
+    color:#CC0000;
+}
+.advert_list:where(:not(.advert_view)) > li > .advert > article > .right_column > .right_column_content > header div.balance {
+    font-size: 90%;
+    margin-top:5px;
+    color:var(--color-advert-text-in-list);
+}
+
+
+
+
+
+
+
+
+/* Таблицы в объявлении */
+.advert_list > li > .advert > article > .right_column > .right_column_content > .field_row_fake {
+    margin-bottom: 0.5rem;
+}
+.advert_list:where(:not(.advert_view)) > li > .advert > article > .right_column > .right_column_content > .field_row_fake {
+    flex-direction: column;
+}
+
+.advert_list > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div:first-child,
+.advert_list > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div.group {
+    flex-grow: 0;
+    flex-shrink: 0;
+    padding:0;
+    flex-basis: 100%;
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div:first-child,
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div.group {
+    align-self: center;
+}
+@media screen and (max-width: 780px) {
+    .advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div:first-child,
+    .advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div.group {
+        align-self: stretch;
+    }
+}
+
+
+/* ЛЕВЫЙ СТОЛБЕЦ */
+.advert_list > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div:first-child {
+    color: var(--color-advert-text-in-list);
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div:first-child {
+    color: var(--color-advert-view-table-legend);
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div:first-child {
+    flex-basis: 30%;
+    font-weight: bold;
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake {
+    background-image: repeating-linear-gradient(90deg,#b8b8b8 1px,#b8b8b8 2px,#fff 2px,#fff 3px);
+    background-size: auto 1px;
+    background-repeat: repeat no-repeat;
+    background-position: left center;
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake:hover {
+    background-image: repeating-linear-gradient(90deg,#b8b8b8 1px,#b8b8b8 2px,#666 2px,#fff 3px);
+}
+@media screen and (max-width: 780px) {
+    .advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake {
+        background: none !important;
+    }
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div:first-child > span {
+    background-color: var(--advert-bg-color);
+    padding-right: 0.5rem;
+    display: inline-block;
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake.contact > div:first-child > span {
+    padding-left: 20px;
+    background:none top left scroll no-repeat var(--advert-bg-color);
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake.contact.balance > div:first-child > span {
+    /* https://www.svgrepo.com/svg/449902/shopping-cart */
+    background-image: url(/svg/local/icon-16-cart.svg);
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake.contact.user > div:first-child > span {
+    /* https://www.svgrepo.com/svg/449958/user */
+    background-image: url(/svg/local/icon-16-user.svg);
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake.contact.phone > div:first-child > span {
+    /* https://www.svgrepo.com/svg/449855/phone */
+    background-image: url(/svg/local/icon-16-phone.svg);
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake.contact.email > div:first-child > span {
+    /* https://www.svgrepo.com/svg/449724/envelope */
+    background-image: url(/svg/local/icon-16-mail.svg);
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake.contact.url > div:first-child > span {
+    /* https://www.svgrepo.com/svg/449802/link */
+    background-image: url(/svg/local/icon-16-web.svg);
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake.contact.telegram > div:first-child > span {
+    /* https://www.svgrepo.com/svg/449848/paper-plane */
+    background-image: url(/svg/local/icon-16-tg.svg);
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake.contact.skype > div:first-child > span {
+    /* https://www.svgrepo.com/svg/501360/skype */
+    background-image: url(/svg/local/icon-16-skype.svg);
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake.contact.contacts > div:first-child > span {
+    /* https://www.svgrepo.com/svg/449789/info-circle */
+    background-image: url(/svg/local/icon-16-info-3.svg);
+}
+
+/* ПРАВЫЙ СТОЛБЕЦ */
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div.group {
+    flex-basis: 70%;
+    background-color: var(--advert-bg-color);
+}
+.advert_list > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div.group {
+    padding-left: 0.5rem;
+}
+.advert_list > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div.group a:where(:link, :visited, :hover) {
+    /*color: var(--color-advert-view-table-link);*/
+    text-decoration: none;
+}
+.advert_list > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div.group a:hover {
+    text-decoration: underline;
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div.group a:where(:link, :visited, :hover) {
+    text-decoration: underline;
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .field_row_fake > div.group a:hover {
+    text-decoration: none;
+}
+
+
+
+
+
+
+/* панель управления */
+.advert_list > li > .advert > aside {
+    border-top: 1px dashed #ccc;
+    overflow:hidden;
+}
+.advert_list > li > .advert > aside > ul {
+    display: block;
+    list-style-type: none;
+    margin: 0 0 0 5px;
+    overflow: hidden;
+    transition: all 0.5s;
+}
+.advert_list > li > .advert > aside > ul > li {
+    color: #666666;
+    display: block;
+    float: left;
+    line-height: 16px;
+    margin: 5px 20px 5px 0px;
+    padding: 0 0 0 23px;
+
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    background-position: left center;
+}
+.advert_list > li > .advert > aside > ul > li:where(:not(.advert_info,.advert_search)) {
+    white-space: nowrap;
+}
+/* Meteor Solid Tiny Icons Collection
+https://www.svgrepo.com/collection/meteor-solid-tiny-icons/
+*/
+.advert_list > li > .advert > aside ul li.advert_info {
+    /* https://www.svgrepo.com/svg/384412/info-information */
+    background-image: url(/svg/local/icon-16-info-2.svg);
+}
+.advert_list > li > .advert > aside ul li.edit_link {
+    /* https://www.svgrepo.com/svg/449905/sliders-v */
+    background-image: url(/svg/local/icon-16-settings.svg);
+}
+.advert_list > li > .advert > aside ul li.up_link{
+    /* https://www.svgrepo.com/svg/449818/long-arrow-up */
+    background-image: url(/svg/local/icon-16-up.svg);
+}
+.advert_list > li > .advert > aside ul li.lock_link{
+    /* https://www.svgrepo.com/svg/449812/lock-s */
+    background-image: url(/svg/local/icon-16-lock.svg);
+}
+.advert_list > li > .advert > aside ul li.lock-open_link{
+    /* https://www.svgrepo.com/svg/449809/lock-open-s */
+    background-image:url(/svg/local/icon-16-unlock.svg);
+}
+.advert_list > li > .advert > aside ul li.delete_link{
+    /* https://www.svgrepo.com/svg/449930/times-circle */
+    background-image:url(/svg/local/icon-16-delete-circle.svg);
+}
+.advert_list > li > .advert > aside ul li.delete_user_link{
+    background-image:url(/svg/local/icon-16-user-delete.svg);
+}
+.advert_list > li > .advert > aside ul li.advert_search{
+    background-image:url(/svg/local/icon-16-chart-bar.svg);
+}
+.advert_list > li > .advert > aside ul li.advert_vip,
+.advert_list > li > .advert > aside ul li.advert_special{
+    /* https://www.svgrepo.com/svg/302554/star */
+    background-image: url(/svg/local/icon-16-star.svg);
+    font-weight: bold;
+}
+.advert_list > li > .advert > aside ul li.all_adverts {
+    /* https://www.svgrepo.com/svg/449890/search-s */
+    background-image:url(/svg/local/icon-16-zoom.svg);
+}
+.advert_list > li > .advert > aside ul li.advert_vip a,
+.advert_list > li > .advert > aside ul li.advert_special a {
+    color:#CC0000;
+}
+.advert_list > li > .advert > aside ul li.advert_gp {
+    /* https://www.svgrepo.com/svg/449767/google */
+    background-image:url(/svg/local/icon-16-google.svg);
+}
+.advert_list > li > .advert > aside ul li.advert_yp{
+    /* https://www.svgrepo.com/svg/374204/yandex */
+    background-image:url(/svg/local/icon-16-yandex.svg);
+}
+.advert_list > li > .advert > aside ul li.advert_payment {
+}
+.advert_list > li > .advert > aside ul li.advert_payment a {
+    color:green;
+}
+
+
+
+/*          View             */
+
+.advert_list.advert_view {
+    margin:10px 0;
+}
+
+.advert_list.advert_view > li > .advert > article {
+    position: relative;
+    min-height: 100px;
+}
+@media screen and (max-width: 780px) {
+    .advert_list.advert_view > li > .advert > article {
+        flex-direction: column;
+    }
+}
+.advert_list.advert_view > li > .advert > article > .left_column {
+    flex-basis: auto;
+    max-width: 272px;
+}
+@media screen and (max-width: 780px) {
+    .advert_list.advert_view > li > .advert > article > .left_column {
+        flex-basis: auto;
+        max-width: 100%;
+    }
+}
+@media screen and (max-width: 780px) {
+    .advert_list.advert_view > li > .advert > article > .left_column > .left_column_content {
+        padding-bottom: 5px;
+    }
+}
+.advert_list.advert_view > li > .advert > article > .left_column > .left_column_content > div {
+    float:left;
+    margin:3px;
+    transition: all 0.5s;
+}
+@media screen and (max-width: 780px) {
+    .advert_list.advert_view > li > .advert > article > .left_column > .left_column_content > div {
+        margin:0 5px 5px 0;
+    }
+}
+.advert_list.advert_view > li > .advert > article > .left_column > .left_column_content > div:first-child {
+    width:266px;
+    height: auto; /* Растягивается по высоте картинки */
+}
+@media screen and (max-width: 780px) {
+    .advert_list.advert_view > li > .advert > article > .left_column > .left_column_content > div:first-child {
+        width: 130px;
+        height: 86px;
+    }
+}
+.advert_list.advert_view > li > .advert > article > .left_column > .left_column_content > div.no_photo:first-child {
+    width: 130px;
+    height: 86px;
+}
+@media screen and (max-width: 780px) {
+    .advert_list.advert_view > li > .advert > article > .left_column > .left_column_content > div.no_photo:empty {
+        display: none;
+    }
+}
+.advert_list.advert_view > li > .advert > article > .left_column > .left_column_content > div > a > img {
+    position: static;
+}
+@media screen and (max-width: 780px) {
+    .advert_list.advert_view > li > .advert > article > .right_column {
+        /* Если это не поставить ломается верстка в IE */
+        flex-basis: auto;
+    }
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content {
+    padding: 10px;
+    font-size: var(--font-size-14);
+}
+@media screen and (max-width: 780px) {
+    .advert_list.advert_view > li > .advert > article > .right_column > .right_column_content {
+        padding: 5px 0 0 0;
+    }
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .price {
+    font-size: var(--font-size-18);
+    padding: 10px;
+    margin: -15px -15px 0 5px;
+}
+@media screen and (max-width: 780px) {
+    .advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > .price {
+        margin: 0 0 0 10px;
+        border-radius: var(--border-radius-common);
+    }
+}
+.advert_list:where(:not(.advert_view)) > li > .advert > article > .right_column > .right_column_content > p {
+    color: var(--color-advert-text-in-list);
+    max-height:6rem;
+    overflow: hidden;
+    width:auto;
+    word-break:break-all;
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > header {
+    margin-bottom: 1.5rem;
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > header h2 {
+    font-size: var(--font-size-22);
+}
+.advert_list.advert_view > li > .advert > article > .right_column > .right_column_content > p {
+    margin:3rem 0;
+}
+
+.advert_list.advert_view > li > .advert > div.navblock ul {
+    margin: 0 6px;
+}

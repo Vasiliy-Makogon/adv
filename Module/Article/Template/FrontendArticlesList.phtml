@@ -1,0 +1,77 @@
+<?php
+
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Article\Model\Article;
+use Krugozor\Framework\Module\Article\Service\FrontendArticlesListService;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+$searchKeyword = $this->getRequest()->getRequest('keyword', Request::SANITIZE_STRING_FULLTEXT);
+
+/** @var FrontendArticlesListService $articlesListService */
+$articlesListService = $this->getStorage()->get('articlesListService');
+
+$articlesListService
+    ->getPagination()
+    ->getHelper()
+    ->setRequestUriParameter('keyword', $searchKeyword)
+    ->setCssNormalLinkClass('navigation_normal_link')
+    ->setCssActiveLinkClass('navigation_open_link');
+$pagination = $articlesListService->getPagination();
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Local/MetaTags')) ?>
+
+    <?= $this->getJs('local', 'onselectstart.js') ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'structure.css'],
+        'help' => ['help.css'],
+    ]) ?>
+
+</head>
+<body itemscope itemtype="https://schema.org/WebPage">
+
+<?php include $this->getRealTemplatePath('Local/FrontendTop') ?>
+
+<div class="content">
+
+    <?php include $this->getRealTemplatePath('Common/Notification') ?>
+
+    <header>
+        <nav><h1>Статьи</h1></nav>
+    </header>
+
+    <?php if ($articlesListService->getList()->count()): ?>
+        <dl>
+            <?php /** @var Article $article */
+            foreach ($articlesListService->getList()->getDataAsArray() as $article): ?>
+                <dt>
+                    <a href="<?= $article->getUrl(true) ?>"><?php
+                        echo Format::outPut($article->getHeader()) ?></a>
+                </dt>
+                <dd>
+                    <?php
+                    $text = strip_tags($article->getText());
+                    $text = Format::getPreviewStr($text, 500);
+                    echo Format::outPut($text);
+                    ?>
+                </dd>
+            <?php endforeach; ?>
+        </dl>
+    <?php endif; ?>
+
+    <?php include $this->getRealTemplatePath('Article/FrontendNavigation'); ?>
+</div>
+
+<?php include $this->getRealTemplatePath('Local/FrontendBottom') ?>
+<?php include $this->getRealTemplatePath('Prodamus/Popup') ?>
+
+</body>
+</html>

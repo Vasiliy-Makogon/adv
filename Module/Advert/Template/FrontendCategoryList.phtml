@@ -1,0 +1,447 @@
+<?php
+
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Advert\Service\FrontendAdvertsListService;
+use Krugozor\Framework\Module\Advert\Type\AdvertType;
+use Krugozor\Framework\Module\Category\Helper\BreadCrumbs;
+use Krugozor\Framework\Module\Category\Helper\Subcategories;
+use Krugozor\Framework\Registry;
+use Krugozor\Framework\Statical\Strings;
+use Krugozor\Framework\View;
+use Krugozor\Framework\Module\User\Cover\TerritoryList;
+use Krugozor\Framework\Module\Category\Model\Category;
+use Krugozor\Cover\CoverArray;
+use Krugozor\Framework\Module\User\Model\AbstractTerritory;
+
+/** @var View $this */
+
+$searchKeyword = $this->getRequest()->getRequest('keyword', Request::SANITIZE_STRING_FULLTEXT);
+$searchType = $this->getRequest()->getRequest('type', Request::SANITIZE_STRING);
+
+/** @var FrontendAdvertsListService $advertsListService */
+$advertsListService = $this->getStorage()->get('advertsListService');
+
+$advertsListService
+    ->getPagination()
+    ->getHelper()
+    ->setCssNormalLinkClass('navigation_normal_link')
+    ->setCssActiveLinkClass('navigation_open_link')
+    ->setViewLastPageLabel(false)
+    ->setRequestUriParameter('keyword', $searchKeyword)
+    ->setRequestUriParameter('type', $searchType);
+$pagination = $advertsListService->getPagination();
+
+/** @var TerritoryList $territoryList */
+$territoryList = $this->getStorage()->get('territoryList');
+
+/** @var Category $currentCategory */
+$currentCategory = $this->getStorage()->get('currentCategory');
+
+/** @var CoverArray $subcategories */
+$subcategories = $this->getStorage()->get('subcategories');
+
+$keywords = $subcategories->map(function (Category $category) {
+    return $category->getKeywords();
+})
+    ->append($currentCategory->getKeywords())
+    ->filter()
+    ->implode(', ');
+
+if (!$keywords) {
+    $keywords = $this->getLang()->get('meta.keywords');
+}
+
+$keywords = Strings::createMessageFromParams(
+    CoverArray::fromExplode(',', $keywords)->unique()->implode(','),
+    ['city' => $territoryList->getLastTerritory()->getNameRu2()]
+);
+
+$bread_crumbs_postfix_text = Strings::createMessageFromParams(
+    $this->getLang()->get('content.in_city'), [
+        'city' => $territoryList->get('city')?->getNameRu2()
+            ?: $territoryList->get('region')?->getNameRu2()
+            ?: $territoryList->get('country')->getNameRu2(),
+    ]
+);
+
+$this->getLang()->get('title')->replaceParams(0, [
+    'category' => $currentCategory->getName(),
+    'city' =>
+        $territoryList->get('city')?->getNameRu2()
+            ?: $territoryList->get('region')?->getNameRu2()
+            ?: $territoryList->get('country')->getNameRu2(),
+]);
+
+
+
+// Для Яндекса, что бы не ругался на одинаковые title и description
+if (($page = $pagination->getCurrentPage()) > 1) {
+    $this->getLang()->get('title')->addPostfix(0, Strings::createMessageFromParams(
+        $this->getLang()->get('content.page_number'), ['page' => $page]
+    ));
+
+    $description = $this->getLang()->get('title')->item(0);
+} else {
+    /** @var string $description */
+    $description = $currentCategory->getDescription()
+        ? strip_tags($currentCategory->getDescription())
+        : $this->getLang()->get('title')->getLast();
+
+    $description = Strings::createMessageFromParams(
+        $description,
+        ['city' => $territoryList->getLastTerritory()->getNameRu2()]
+    );
+}
+
+/** @var CoverArray $specialAdvertsList */
+$specialAdvertsList = $this->getStorage()->get('specialAdvertsList');
+
+/** @var CoverArray $pathToCurrentCategory */
+$pathToCurrentCategory = $this->getStorage()->get('pathToCurrentCategory');
+
+/** @var CoverArray $categories */
+$categories = $this->getStorage()->get('categories');
+
+$canonicalUrl = $this->getRequest()->getCanonicalRequestUri()->getSimpleUriValue(true);
+$siteName = Registry::getInstance()->get('HOSTINFO.SITE_NAME');
+$host = $this->getRequest()->getCanonicalRequestUri()->getHost();
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+    <?php if ($pagination->getCurrentPage() == 1): ?>
+        <meta name="robots" content="<?php if ($advertsListService->getList()->count()): ?>index, follow, noarchive<?php else: ?>none<?php endif; ?>">
+    <?php else: ?>
+        <meta name='robots' content="noindex, follow, noarchive">
+    <?php endif; ?>
+
+    <meta charset="utf-8">
+    <meta name="referrer" content="unsafe-url">
+    <meta name="keywords" content="<?= $keywords ?>">
+    <meta name="description" content="<?= $description ?>">
+    <?= $this->getLang()->get('title')->getHtml() ?>
+
+    <?= $this->getLang()->get('title')->getOgHtml() ?>
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:url" content="<?= $canonicalUrl ?>">
+    <meta property="og:description" content="<?= $description ?>">
+    <meta property="og:site_name" content="<?= $siteName ?>">
+    <meta property="og:image" content="<?= $host ?>/img/local/snippet.jpg">
+    <meta property="og:image:secure_url" content="<?= $host ?>/img/local/snippet.jpg">
+    <meta property="og:image:width" content="800">
+    <meta property="og:image:height" content="600">
+    <meta property="og:image:type" content="image/jpeg">
+
+    <link rel="canonical" href="<?= $canonicalUrl ?>">
+
+    <link rel="icon" href="<?= $host ?>/favicon.ico">
+    <link rel="apple-touch-icon" href="<?= $host ?>/apple-touch-icon.png">
+
+    <link rel="preload" href="/fonts/local/HANDGOTN.woff2" as="font" type="font/woff2" crossorigin>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'structure.css', 'categories.css'],
+        'advert' => ['_adverts-list.css'],
+    ]) ?>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.ajax.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.locations.js'); ?>
+    <?= $this->getJs('advert', '_adverts-list.js') ?>
+    <?= $this->getJs() ?>
+
+    <script>window.yaContextCb=window.yaContextCb||[]</script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
+</head>
+<body itemscope itemtype="https://schema.org/WebPage">
+
+<?php include $this->getRealTemplatePath('Local/FrontendTop') ?>
+
+<div id="<?= $this->getPageId() ?>" class="content">
+
+    <?php include $this->getRealTemplatePath('Common/Notification') ?>
+
+    <header>
+        <nav itemprop="breadcrumb" itemscope itemtype="https://schema.org/BreadcrumbList">
+            <?php $i = 0;
+            /** @var AbstractTerritory $territory */
+            foreach ($territoryList as $territory): $i++; ?>
+                <?php if ($i != 1): ?>/<?php endif; ?>
+                <span itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    <a itemprop="item" href="<?= $territory->getUrl() ?>/categories/"
+                    ><span itemprop="name">Объявления в <?= $territory->getNameRu2() ?></span
+                        ><meta itemprop="position" content="<?= $i ?>"></a>
+                </span>
+            <?php endforeach; ?>
+
+            <?php if ($territoryList->isCountry()): ?>
+                / <span id="js_region_select_wrap"></span>
+            <?php elseif ($territoryList->isRegion()): ?>
+                / <span id="js_city_select_wrap"></span>
+            <?php endif; ?>
+
+            <?php
+            // Если открыта только страна, то выводим "Объявления в России / Недвижимость"
+            // Если открыт регион или город, то выводим "Объявления в России / Недвижимость в Московской области"
+            $postfixText = !$territoryList->isCountry()
+                ? Strings::createMessageFromParams(
+                    $this->getLang()->get('content.in_city'),
+                    ['city' => $territory->getNameRu2()]
+                ) : '';
+
+            echo (new BreadCrumbs(
+                    $pathToCurrentCategory,
+                    $territoryList->getLastTerritory()->getUrl() . '/categories',
+                    '/'))
+                ->setLastElementWrapTag('h1')
+                ->setPostfixText($postfixText)
+                ->withSchemaPosition(++$i)
+                ->getHtml();
+            ?>
+        </nav>
+        <?php if ($pagination->getCurrentPage() == 1 && $currentCategory->getDescription()) : ?>
+            <p>
+                <?= Strings::createMessageFromParams(
+                    $currentCategory->getDescription(),
+                    ['city' => $territoryList->getLastTerritory()->getNameRu2()]
+                ) ?>
+            </p>
+        <?php endif; ?>
+    </header>
+
+    <?php if ($advertsListService->getList()->count()): ?>
+        <div class="two_column two_column_wrap">
+            <div class="left_column">
+                <div class="left_column_content">
+
+                    <?php if ($subcategories->count()): ?>
+                        <nav class="subblock categories_list multiple with_background">
+                            <?= (new Subcategories($subcategories))
+                                ->setCurrentTerritory($territoryList->getLastTerritory())
+                                ->setCurrentCategory($currentCategory)
+                                ->getHtml()
+                            ?>
+                        </nav>
+                    <?php endif; ?>
+
+                    <!--noindex-->
+                    <div class="subblock filter">
+                        <div class="two_column">
+                            <div class="left_column">
+                                <div class="left_column_content">
+
+                                    <div class="bheader add_header_icon add_category_search_icon">Фильтр по объявлениям:</div>
+                                    <form method="get"
+                                          action="<?= $this->getRequest()->getCanonicalRequestUri()->getEscapeUriValue() ?>">
+
+                                        <?php if ($currentCategory->getAdvertTypes()->getAdvertTypes()->count() > 1): ?>
+                                            <div class="field_row">
+                                                <label>Вас интересует:</label>
+                                                <div class="group radiobuttons_classic">
+                                                    <?php
+                                                    /** @var AdvertType $advertType */
+                                                    foreach ($currentCategory->getAdvertTypes()->getAdvertTypes() as $advertType): ?>
+                                                        <?= $this->getHelper(Form::class)->inputRadio(
+                                                            'type',
+                                                            $advertType->getValue(),
+                                                            $searchType,
+                                                            array('id' => 'label_' . $advertType->getValue())
+                                                        )->getHtml() ?>
+                                                        <?= $this->getHelper(Form::class)->label(
+                                                            $advertType->getAsText(),
+                                                            'label_' . $advertType->getValue()
+                                                        )->getHtml() ?>
+                                                    <?php endforeach; ?>
+                                                    <?= $this->getHelper(Form::class)->inputRadio(
+                                                        'type',
+                                                        '',
+                                                        $searchType,
+                                                        array('id' => 'label_all')
+                                                    )->getHtml() ?>
+                                                    <?= $this->getHelper(Form::class)->label(
+                                                        'всё',
+                                                        'label_all'
+                                                    )->getHtml() ?>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <div class="field_row">
+                                            <label for="keyword">Поиск по слову:</label>
+                                            <div class="group">
+                                                <?= $this->getHelper(Form::class)->inputText(
+                                                    'keyword',
+                                                    $searchKeyword,
+                                                    array('maxlength' => 100, 'id' => 'keyword')
+                                                )->getHtml() ?>
+                                                <div class="animate_field_description">
+                                                    <div class="animate_field_content">
+                                                        <div class="description_before_fields">
+                                                            Укажите ключевые слова для поиска по базе объявлений.
+                                                            Не стоит писать обобщённые слова, такие как &laquo;телевизор&raquo; или
+                                                            &laquo;машина&raquo;, указывайте наиболее чёткие поисковые запросы.
+                                                            Например: &laquo;Телевизор LG 32LB561V&raquo;, &laquo;Lada Priora&raquo;.
+                                                            Ключевые слова должны состоять не менее чем из 4 символов.
+                                                        </div>
+                                                    </div>
+                                                    <div class="triangle-right-border"></div>
+                                                    <div class="triangle-right"></div>
+                                                </div>
+                                                <input type="submit" value="Поиск">
+                                                <input class="js_reset_button" type="reset" value="Сбросить">
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div id="js_add_advert" class="right_column">
+                                <div data-country="<?php if ($territoryList->get('country')): ?><?= $territoryList->get('country')->getId() ?><?php endif; ?>"
+                                     data-region="<?php if ($territoryList->get('region')): ?><?= $territoryList->get('region')->getId() ?><?php endif; ?>"
+                                     data-city="<?php if ($territoryList->get('city')): ?><?= $territoryList->get('city')->getId() ?><?php endif; ?>"
+                                     data-category="<?= $currentCategory->getId() ?>" class="right_column_content">
+                                    <a href="/advert/frontend-edit-advert/">
+                                        Подать объявление бесплатно
+                                        <?php if ($this->getCurrentUser()->isGuest()): ?>и без регистрации<?php endif; ?>
+                                        в раздел
+                                        &laquo;<?= $currentCategory->getName() ?>&raquo;<?= $bread_crumbs_postfix_text ?>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--/noindex-->
+
+                    <ul class="advert_list advert_list_shop_33 advert_list_shop_20">
+                    <?php
+                        $view = new View($this->getRealTemplatePath('Advert/AdvertsList'));
+                        $view->getStorage()->offsetSet('advertsList', $advertsListService->getList());
+                        $view->setCurrentUser($this->getCurrentUser());
+                        $view->getStorage()->offsetSet('isFrontendCategoryListController', true);
+                        $view->run();
+                        echo $view->getOutput();
+                    ?>
+                    </ul>
+                </div>
+            </div>
+
+            <?php if (0): ?>
+            <!--noindex-->
+            <div class="right_column">
+                <div class="right_column_content advert_list_special">
+                    <div class="bheader add_header_icon add_star_icon">Специальные предложения</div>
+                    <ul class="advert_list advert_list_special">
+                    <?php
+                        $view = new View($this->getRealTemplatePath('Advert/AdvertsList'));
+                        $view->getStorage()->offsetSet('advertsList', $specialAdvertsList);
+                        $view->setCurrentUser($this->getCurrentUser());
+                        $view->run();
+                        echo $view->getOutput();
+                    ?>
+                    </ul>
+                </div>
+            </div>
+            <!--/noindex-->
+            <?php endif; ?>
+
+        </div>
+    <?php else: ?>
+        <div class="subblock">
+            <p>Объявлений не найдено. Вы можете <a href="/advert/frontend-edit-advert/">подать объявление бесплатно и
+                    без
+                    регистрации</a> или посмотреть другие <a href="/">объявления</a>.</p>
+        </div>
+    <?php endif; ?>
+
+    <?php include $this->getRealTemplatePath('Advert/FrontendNavigation'); ?>
+
+    <?php if ($advertsListService->getPagination()->getCurrentPage() == 1): ?>
+        <?php if ($currentCategory->getText()): ?>
+            <p class="category_description_first_page">
+                <?= Strings::createMessageFromParams(
+                    $currentCategory->getText(),
+                    ['city' => $territoryList->getLastTerritory()->getNameRu2()]
+                ) ?>
+            </p>
+        <?php endif; ?>
+    <?php endif; ?>
+
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        /* Взято и изменено на основе метода из library/krugozor.locations.js */
+        var nextStepCallback = function (locationObj) {
+            window.location.href = locationObj.SelectElement.value;
+        };
+
+        /* Взято и изменено на основе метода из library/krugozor.locations.js */
+        var createCallback = function (location_id, place_id) {
+            if (!location_id || !this.creator.LOCATION_TYPES[location_id]) {
+                return false;
+            }
+            this.location_id = location_id;
+            var _this = this;
+            try {
+                var ajax = new Krugozor.Ajax();
+                ajax.setObserverState(function (ajx) {
+                    _this._addOptionsToSelect(this.locations);
+                }, true);
+                ajax.get(
+                    "/user/frontend-ajax-location-url/?id=" + place_id +
+                    '&category=<?=$currentCategory->getId()?>&location=' + this.creator.LOCATION_TYPES[this.location_id]
+                );
+            } catch (e) {
+                console.log(e);
+            }
+        };
+
+        <?php if ($territoryList->isCountry()): ?>
+        var select_region_attributes = {name: 'region'};
+        Krugozor.Location._next_step = nextStepCallback;
+        var selectRegionObj = Krugozor.Location.createLocation(select_region_attributes, 'уточнить регион');
+        selectRegionObj.create = createCallback;
+        document.getElementById('js_region_select_wrap').appendChild(selectRegionObj.SelectElement);
+        selectRegionObj.create(2, <?=$territoryList->getLastTerritory()->getId()?>);
+
+        selectRegionObj.SelectElement.addEventListener('focus', function (e) {
+            window.overlay = Krugozor.Overlay.addOverlay(0.6, function () {
+                overlay.removeOverlay();
+            });
+        });
+        selectRegionObj.SelectElement.addEventListener('change', function (e) {
+            window.overlay.removeOverlay();
+        });
+        <?php elseif ($territoryList->isRegion()): ?>
+        var select_city_attributes = {name: 'city'};
+        Krugozor.Location._next_step = nextStepCallback;
+        var selectCityObj = Krugozor.Location.createLocation(select_city_attributes, 'уточнить город');
+        selectCityObj.create = createCallback;
+        document.getElementById('js_city_select_wrap').appendChild(selectCityObj.SelectElement);
+        selectCityObj.create(3, <?=$territoryList->getLastTerritory()->getId()?>);
+
+        selectCityObj.SelectElement.addEventListener('focus', function (e) {
+            window.overlay = Krugozor.Overlay.addOverlay(0.6, function () {
+                overlay.removeOverlay();
+            });
+        });
+        selectCityObj.SelectElement.addEventListener('change', function (e) {
+            window.overlay.removeOverlay();
+        });
+        <?php endif; ?>
+    });
+</script>
+
+<?php include $this->getRealTemplatePath('Local/FrontendBottom') ?>
+<?php include_once $this->getRealTemplatePath('Prodamus/Popup') ?>
+
+</body>
+</html>

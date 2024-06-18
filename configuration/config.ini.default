@@ -1,0 +1,100 @@
+﻿; Различные вариации написания хоста
+[HOSTINFO]
+DOMAIN_AS_TEXT="сайт-бесплатных-объявлений.рф"
+DOMAIN='xn-----6kcbechue4acjte0afmn6afrh4evgua3i.xn--p1ai'
+HOST_AS_TEXT='https://сайт-бесплатных-объявлений.рф';
+HOST='https://xn-----6kcbechue4acjte0afmn6afrh4evgua3i.xn--p1ai';
+SITE_NAME="Сайт бесплатных объявлений"
+
+[DATABASE]
+USER=
+PASSWORD=
+HOST="127.0.0.1"
+PORT=3306
+NAME=
+CHARSET=utf8mb4
+
+[SECURITY]
+USE_HTTPS = 0;
+
+[DEBUG]
+; Настройка директивы display_errors PHP
+DISPLAY_ERRORS=1
+; Настройка директивы display_startup_errors PHP
+DISPLAY_STARTUP_ERRORS=1
+; Вывод отладочной информации внизу каждой страницы
+ENABLED_DEBUG_INFO=1
+; Query string параметр выводящей отладочную информацию
+QS_DEBUG_KEY=debug
+QS_MEMCACHE_FLUSH_KEY=flush
+
+[LOCALIZATION]
+TIMEZONE="Europe/Moscow"
+; Локаль для Windows
+LOCALES[]="Russian_Russia.1251"
+LOCALES[]="Russian"
+LOCALES[]="rus"
+; Локаль для linux
+LOCALES[]="ru_RU.utf8"
+LOCALES[]="ru_RU.UTF-8"
+LOCALES[]="ru_RU"
+; Язык по умолчанию.
+; От этой настройки зависит корректность обработки файлов интернационализации, если язык явно не будет указан в URL-адресе.
+LANG=ru
+
+[EMAIL]
+; Email, с которого уходит почта пользователям
+NOREPLY="noreply@xn-----6kcbechue4acjte0afmn6afrh4evgua3i.xn--p1ai"
+; Email администратора сайта
+ADMIN="admin@host.ru"
+; Обратная связь
+CALLBACK="callback@host.ru"
+
+; Различные пути к внутренним ресурсам
+[PATH]
+; Шрифт капчи
+CAPCHA_FONT="fonts/ASmperCmUp.ttf"
+; Директория лог-файлов
+LOGS_DIR="logs/"
+; Лог ошибок PHP
+PHP_ERROR_LOG="logs/php_error.log"
+; Лог мерчатнта
+MERCHANT_LOG="logs/merchant.log"
+; Лог SQL
+SQL_LOG="logs/sql.log"
+; Компилируемые CSS
+CCSS = "cache/ccss"
+
+; Загрузка изображений
+[UPLOAD]
+MAX_FILES_COUNT=5;
+MAX_FILE_SIZE=15M
+THUMBNAIL_SMALL="/i/small/"
+THUMBNAIL_ORIGINAL="/i/original/"
+THUMBNAIL_150x100="/i/150x100/"
+THUMBNAIL_800x800="/i/800x800/"
+
+[PAYMENTS]
+ENABLED=1
+DESCRIPTION_ACTION_TOP="Оплата услуги выделения объявления №"
+DESCRIPTION_ACTION_ACTIVATE="Оплата услуги активации объявления №"
+DESCRIPTION_ACTION_SPECIAL="Оплата услуги 'Спецразмещение' объявления №"
+PAYMENT_ACTION_TOP=10
+PAYMENT_ACTION_ACTIVATE=10
+PAYMENT_ACTION_SPECIAL=99
+
+[PRODAMUS]
+SECRET_KEY=
+MERCHANT_URL=https://adverts.payform.ru/
+DEMO_MODE=1
+
+; Тут можно указать иные настройки приложения
+[APPLICATION]
+; Кол-во последних объявлений на главной
+MAX_ADVERTS_COUNT_ON_INDEX_PAGE = 33
+; Кол-во объявлений, отображаемых в линейшке special
+MIN_ADVERTS_WITH_SPECIAL_STATUSES_ON_VIEW = 10
+; Кол-во отображаемых объявлений в каталоге на странице региона
+MAX_ADVERTS_COUNT_ON_REGION = 68
+; Кол-во отображаемых объявлений в каталоге конкретной категории
+MAX_ADVERTS_COUNT_ON_CATEGORY = 50

@@ -1,0 +1,82 @@
+<?php
+
+use Krugozor\Framework\Registry;
+
+?>
+<!--noindex-->
+<aside id="advert_vip" class="payment_popup">
+    <div>
+        <div class="bheader add_header_icon add_star_icon">
+            Хотите привлечь больше внимание на своё объявление и повысить его эффективность?
+        </div>
+
+        <p class="price_description">
+            Всего за <?= Registry::getInstance()->get('PAYMENTS.PAYMENT_ACTION_TOP') ?> рублей
+            вы можете сделать ваше объявление более заметным, воспользовавшись услугой
+            &laquo;Выделить&nbsp;объявление&raquo; &mdash; 30 дней объявление будет выделено особым цветом,
+            будет находиться выше других бесплатных объявлений, соответственно его увидят больше посетителей сайта:
+        </p>
+
+        <img src="/img/local/vip.jpg" alt="">
+
+        <p class="approval_terms_of_service">
+            <label for="approval_advert_vip">
+                <input type="checkbox" name="approval" id="approval_advert_vip"> Совершая платёж я ознакомлен(а) с
+                условиями <a
+                        target="_blank" href="/help/oferta/">публичной оферты</a> и
+                <a target="_blank" href="/help/terms_of_service/">условиями использования сайта</a> и принимаю данные
+                условия.
+            </label>
+        </p>
+
+        <p class="description">Мы предоставляем возможность оплатить покупку онлайн непосредственно через
+            интернет-магазин. К оплате принимаются пластиковые карты VISA, MasterCard и МИР. Прием оплат осуществляется
+            при помощи системы Продамус.Платежи, при этом данные карт и клиента передаются по защищенным каналам связи.
+            Приём платежей происходит через защищённое безопасное соединение, используется SSL протокол.</p>
+
+        <a href="#" class="pseudo_button js-link">
+            Выделить объявление и разместить в VIP-линейке
+            за <?= Registry::getInstance()->get('PAYMENTS.PAYMENT_ACTION_TOP') ?> руб.
+        </a>
+        <a href="#" class="pseudo_button_reject js-link">Спасибо, в другой раз</a>
+    </div>
+</aside>
+
+<aside id="advert_special" class="payment_popup">
+    <div>
+        <div class="bheader add_header_icon add_star_icon">
+            Хотите привлечь больше внимание на своё объявление и повысить его эффективность?
+        </div>
+
+        <p class="price_description">
+            Всего за <?= Registry::getInstance()->get('PAYMENTS.PAYMENT_ACTION_SPECIAL') ?> рублей
+            вы можете сделать ваше объявление более заметным, воспользовавшись услугой
+            &laquo;Спецпредложение&raquo; &mdash;
+            объявление будет размещено на 30 дней в блоке &laquo;Специальные&nbsp;предложения&raquo; на всех основных страницах сайта
+            в увеличенных пропорциях, максимально привлекая внимание посетителей сайта:
+        </p>
+
+        <img src="/img/local/special.jpg" alt="">
+
+        <p class="approval_terms_of_service">
+            <label for="approval_advert_special">
+                <input type="checkbox" name="approval" id="approval_advert_special"> Совершая платёж я ознакомлен(а) с
+                условиями <a
+                        target="_blank" href="/help/oferta/">публичной оферты</a> и
+                <a target="_blank" href="/help/terms_of_service/">условиями использования сайта</a> и принимаю данные
+                условия.
+            </label>
+        </p>
+
+        <p class="description">Мы предоставляем возможность оплатить покупку онлайн непосредственно через
+            интернет-магазин. К оплате принимаются пластиковые карты VISA, MasterCard и МИР. Прием оплат осуществляется
+            при помощи системы Продамус.Платежи, при этом данные карт и клиента передаются по защищенным каналам связи.
+            Приём платежей происходит через защищённое безопасное соединение, используется SSL протокол.</p>
+
+        <a href="#" class="pseudo_button js-link">
+            Разместить объявление в блоке &laquo;Специальные предложения&raquo;
+            за <?= Registry::getInstance()->get('PAYMENTS.PAYMENT_ACTION_SPECIAL') ?> руб.</a>
+        <a href="#" class="pseudo_button_reject js-link">Спасибо, в другой раз</a>
+    </div>
+</aside>
+<!--/noindex-->

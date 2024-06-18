@@ -1,0 +1,722 @@
+<?php
+
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Html\ElementSelect;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Advert\Model\Advert;
+use Krugozor\Framework\Module\Advert\Model\Thumbnail;
+use Krugozor\Framework\Module\Advert\Type\PriceType;
+use Krugozor\Framework\Module\Category\Model\Category;
+use Krugozor\Framework\Module\User\Model\User;
+use Krugozor\Framework\Registry;
+use Krugozor\Framework\Statical\Strings;
+use Krugozor\Framework\Type\Date\DateTime;
+use Krugozor\Framework\Validator\StringLengthValidator;
+use Krugozor\Framework\Validator\TelegramValidator;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+/** @var Advert $advert */
+$advert = $this->getStorage()->get('advert');
+
+/** @var Category $category */
+$category = $this->getStorage()->get('category');
+
+/** @var User $advert */
+$user = $this->getStorage()->get('user');
+
+/** @var int $return_on_page */
+$return_on_page = $this->getRequest()->getRequest('return_on_page', Request::SANITIZE_INT);
+
+/** @var int $return_on_page */
+$create_user = $this->getRequest()->getRequest('create_user', Request::SANITIZE_INT);
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+        'advert' => ['backend-edit.css'],
+    ]) ?>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.ajax.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.category-select-list-builder.js'); ?>
+    <?= $this->getJs('local', 'library/krugozor.locations.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.thumbnail.js') ?>
+    <?= $this->getJs('local', 'phoneinput.js') ?>
+    <?= $this->getJs() ?>
+
+    <script>
+        const is_guest = 0;
+        const category_pid = <?= (int) $category->getPid() ?>;
+        const current_category = <?= (int) $category->getId() ?>;
+        const max_upload_files = <?= Registry::getInstance()->get('UPLOAD.MAX_FILES_COUNT') ?>;
+        const current_advert_type = '<?= $advert->getType()->getValue() ?>';
+    </script>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+
+<form method="post" id="main_form" action="<?= $this->getRequest()->getRequestUri()->getEscapeUriValue() ?>">
+
+    <table class="edit">
+        <thead>
+        <tr>
+            <th colspan="2">
+                <?php if ($advert->getId()): ?>
+                    Редактирование объявления &laquo;<a target="_blank" href="/advert/<?= $advert->getId() ?>.xhtml"
+                    ><?= Format::hsc($advert->getHeader()) ?></a>&raquo;
+                <?php else: ?>
+                    Добавление объявления
+                <?php endif; ?>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td class="compulsory">Объявление активно:</td>
+            <td>
+                <?php
+                $select = $this->getHelper(Form::class)->inputSelect(
+                    'advert[active]',
+                    $advert->getActive(),
+                );
+                $select->addOption(
+                    $this->getHelper(Form::class)->inputOption(
+                        1, $this->getLang()->get('content.yes')
+                    )
+                );
+                $select->addOption(
+                    $this->getHelper(Form::class)->inputOption(
+                        0, $this->getLang()->get('content.no')
+                    )
+                );
+                echo $select->getHtml();
+                ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('active')
+                ) ?>
+            </td>
+        </tr>
+
+        <?php if (false): ?>
+            <tr>
+                <td>Объявление оплачено:</td>
+                <td>
+                    <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                        'advert[payment]', 1, 0,
+                        $advert->getIdUser() != User::GUEST_USER_ID ? $advert->getPayment() : 1
+                    ) ?>
+                    <?= $this->getHelper(Form::class)->getFieldError(
+                        $this->getErrors()->get('payment')
+                    ) ?>
+                </td>
+            </tr>
+        <?php endif; ?>
+
+        <tr>
+            <td class="compulsory">Категория:</td>
+            <td>
+                <div id="js-select-category-wrapper"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>ID пользователя:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'advert[id_user]',
+                    $advert->getIdUser(),
+                    ['maxlength' => 11]
+                )->getHtml() ?>
+
+                <?php if ($advert->getIdUser() != User::GUEST_USER_ID): ?>
+                    [<a href="/user/backend-edit/?id=<?= $advert->getIdUser() ?>">профиль</a>]
+                <?php endif; ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('id_user')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td><?= $this->getLang()->get('content.id') ?>:</td>
+            <td><?= $advert->getId() ?></td>
+        </tr>
+        <tr>
+            <td>UNIQUE USER COOKIE ID:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'advert[unique_user_cookie_id]',
+                    $advert->getUniqueUserCookieId() ?? Strings::getUnique(),
+                    ['maxlength' => StringLengthValidator::MD5_MAX_LENGTH]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('unique_user_cookie_id')
+                ) ?>
+
+                <?php if ($advert->getUniqueUserCookieId()): ?>
+                    <a target="_blank"
+                       href="/advert/backend-main/?unique_user_cookie_id=<?= $advert->getUniqueUserCookieId() ?>"
+                    >Найти все объявления по UUCI</a>
+                <?php endif; ?>
+            </td>
+        </tr>
+
+        <?php if ($advert->getIdUser() == User::GUEST_USER_ID && $advert->getEmail()->getValue()): ?>
+            <tr>
+                <td>Создать пользователя и отправить на его email данные с авторизацией.<br>
+                    Все объявления пользователя, поданные им анонимно, привяжутся к его аккаунту по уникальному
+                    cookie-идентификатору
+                    <a target="_blank"
+                       href="/advert/backend-main/?unique_user_cookie_id=<?= $advert->getUniqueUserCookieId() ?>"><?= $advert->getUniqueUserCookieId() ?></a>
+                </td>
+                <td>
+                    <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                        'create_user',
+                        1, 0,
+                        $create_user
+                    ) ?>
+                </td>
+            </tr>
+        <?php endif; ?>
+
+        <tr>
+            <td>Дата создания:</td>
+            <td><p><?= $advert->getCreateDate()->formatAsMysqlDatetime() ?></p></td>
+        </tr>
+        <tr>
+            <td>Дата редактирования:</td>
+            <td>
+                <?php if ($advert->getEditDate()): ?>
+                    <p><?= $advert->getEditDate()->formatAsMysqlDatetime() ?></p>
+                    <p>будет изменена после редактирования</p>
+                <?php else: ?>
+                    <p>Не редактировалось</p>
+                <?php endif; ?>
+            </td>
+        </tr>
+        <tr>
+            <td>VIP:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'advert[vip_date]',
+                    $advert->getVipDate() ? $advert->getVipDate()->formatAsMysqlDatetime() : null,
+                    ['id' => 'vip_date', 'maxlength' => 19]
+                )->getHtml() ?>
+
+                <div>
+                    <p>Назначить:
+                        <?php
+                        $date = new DateTime();
+                        $date->add(new DateInterval('P7D')); ?>
+                        <a href="#" data-target="vip_date"
+                           data-time="<?= $date->formatAsMysqlDatetime(); ?>">+7 дней</a>,
+                        <?php
+                        $date = new DateTime();
+                        $date->add(new DateInterval('P14D')); ?>
+                        <a href="#" data-target="vip_date"
+                           data-time="<?= $date->formatAsMysqlDatetime(); ?>">+14 дней</a>,
+                        <?php
+                        $date = new DateTime();
+                        $date->add(new DateInterval('P1M')); ?>
+                        <a href="#" data-target="vip_date"
+                           data-time="<?= $date->formatAsMysqlDatetime(); ?>">+месяц</a>,
+                        <?php
+                        $date = new DateTime();
+                        $date->add(new DateInterval('P1Y')); ?>
+                        <a href="#" data-target="vip_date"
+                           data-time="<?= $date->formatAsMysqlDatetime(); ?>">+год</a>
+
+                        <a href="#" data-target="vip_date" data-time="">-сброс</a>
+                    </p>
+                </div>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('vip_date')
+                ) ?></td>
+        </tr>
+        <tr>
+            <td>Спецпредложение:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'advert[special_date]',
+                    $advert->getSpecialDate() ? $advert->getSpecialDate()->formatAsMysqlDatetime() : null,
+                    ['id' => 'special_date', 'maxlength' => 19]
+                )->getHtml() ?>
+
+                <div>
+                    <p>Назначить:
+                        <?php
+                        $date = new DateTime();
+                        $date->add(new DateInterval('P7D')); ?>
+                        <a href="#" data-target="special_date"
+                           data-time="<?= $date->formatAsMysqlDatetime(); ?>">+7
+                            дней</a>,
+                        <?php
+                        $date = new DateTime();
+                        $date->add(new DateInterval('P14D')); ?>
+                        <a href="#" data-target="special_date"
+                           data-time="<?= $date->formatAsMysqlDatetime(); ?>">+14
+                            дней</a>,
+                        <?php
+                        $date = new DateTime();
+                        $date->add(new DateInterval('P1M')); ?>
+                        <a href="#" data-target="special_date"
+                           data-time="<?= $date->formatAsMysqlDatetime(); ?>">+месяц</a>,
+                        <?php
+                        $date = new DateTime();
+                        $date->add(new DateInterval('P1Y')); ?>
+                        <a href="#" data-target="special_date"
+                           data-time="<?= $date->formatAsMysqlDatetime(); ?>">+год</a>
+
+                        <a href="#" data-target="special_date" data-time="">-сброс</a>
+                    </p>
+                </div>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('special_date')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Тип объявления:</td>
+            <td>
+                <span class="radiobuttons_classic" id="js_category_radiobuttons"></span>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Заголовок объявления:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'advert[header]',
+                    $advert->getHeader(),
+                    ['maxlength' => 255]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('header')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Текст объявления:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputTextarea(
+                    'advert[text]',
+                    $advert->getText(),
+                    ['id' => 'advert_text']
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('text')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Цена:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'advert[price]',
+                    $advert->getPrice(),
+                    ['id' => 'advert_price', 'maxlength' => 11, 'onkeyup' => 'Krugozor.Forms.filterDigit(this)']
+                )->getHtml() ?>
+
+                <?php
+                /* @var $select ElementSelect */
+                $select = $this->getHelper(Form::class)->inputSelect(
+                    'advert[price_type]', $advert->getPriceType()->getValue()
+                );
+                foreach (PriceType::TYPES as $price_code => $price_data):
+                    $select->addOption(
+                        $this->getHelper(Form::class)->inputOption($price_code, $price_data[0])
+                    );
+                endforeach;
+                echo $select->getHtml();
+                ?>
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('price')
+                ) ?>
+                <p>
+                    <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                        'advert[free]',
+                        1, 0,
+                        $advert->getFree(),
+                        ['id' => 'label_free', 'onclick' => "if (this.checked) document.getElementById('advert_price').value = '';"]
+                    ) ?>
+                    <label for="label_free">даром</label>
+                    <?= $this->getHelper(Form::class)->getFieldError(
+                        $this->getErrors()->get('free')
+                    ) ?>
+                </p>
+            </td>
+        </tr>
+
+        <?php if ($this->getErrors()->get('contact_info')): ?>
+            <tr>
+                <td colspan="2">
+                    <?= $this->getHelper(Form::class)->getFieldError(
+                        $this->getErrors()->get('contact_info')
+                    ) ?>
+                </td>
+            </tr>
+        <?php endif; ?>
+
+        <tr>
+            <td>Контактное лицо:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'advert[user_name]',
+                    $advert->getUserName(),
+                    ['maxlength' => 255]
+                )->getHtml() ?>
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('user_name')
+                ) ?>
+
+                <?php if ($user->getFullName() && !$user->isGuest()): ?>
+                    <p>
+                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                            'advert[main_user_name]',
+                            1, 0,
+                            $advert->getMainUserName(),
+                            ['id' => 'label_main_user_name']
+                        ) ?>
+                        <label for="label_main_user_name">Контактное лицо &mdash;
+                            <b><?= $user->getFullName() ?></b>
+                        </label>
+                    </p>
+                <?php else: ?>
+                    <?= $this->getHelper(Form::class)->inputHidden(
+                        'advert[main_user_name]', 0
+                    )->getHtml() ?>
+                <?php endif; ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Телефон:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'advert[phone]',
+                    $advert->getPhone(),
+                    ['data-tel-input' => 'data-tel-input', 'maxlength' => 255]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('phone')
+                ) ?>
+
+                <?php if ($user->getPhone()): ?>
+                    <p>
+                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                            'advert[main_phone]',
+                            1, 0,
+                            $advert->getMainPhone(),
+                            ['id' => 'label_main_phone']
+                        ) ?>
+                        <label for="label_main_phone">Использовать для связи основной телефон пользователя
+                            <b><?= $user->getPhone() ?></b>
+                        </label>
+                    </p>
+                <?php else: ?>
+                    <?= $this->getHelper(Form::class)->inputHidden(
+                        'advert[main_phone]', 0
+                    )->getHtml() ?>
+                <?php endif; ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Email-адрес:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'advert[email]',
+                    $advert->getEmail()->getValue(),
+                    ['maxlength' => 255]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('email')
+                ) ?>
+
+                <?php if ($user->getEmail()->getValue() && $user->getEmail()->getValue()): ?>
+                    <p>
+                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                            'advert[main_email]',
+                            1, 0,
+                            $advert->getMainEmail(),
+                            ['id' => 'label_main_email']
+                        ) ?>
+                        <label for="label_main_email">
+                            Использовать для связи основной email пользователя
+                            <b><?= $user->getEmail()->getValue() ?></b>
+                        </label>
+                    </p>
+                <?php else: ?>
+                    <?= $this->getHelper(Form::class)->inputHidden(
+                        'advert[main_email]', 0
+                    )->getHtml() ?>
+                <?php endif; ?>
+            </td>
+        </tr>
+        <tr>
+            <td>URL:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'advert[url]',
+                    $advert->getUrl()->getValue(),
+                    ['maxlength' => 255]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('url')
+                ) ?>
+
+                <?php if ($user->getUrl()->getValue()): ?>
+                    <p>
+                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                            'advert[main_url]',
+                            1, 0,
+                            $advert->getMainUrl(),
+                            ['id' => 'label_main_url']
+                        ) ?>
+                        <label for="label_main_url">
+                            Использовать для связи основной URL пользователя
+                            <b><?= $user->getUrl()->getNiceAnchor() ?></b>
+                        </label>
+                    </p>
+                <?php else: ?>
+                    <?= $this->getHelper(Form::class)->inputHidden(
+                        'advert[main_url]', 0
+                    )->getHtml() ?>
+                <?php endif; ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Telegram:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'advert[telegram]',
+                    $advert->getTelegram(),
+                    [
+                        'id' => 'advert_telegram',
+                        'maxlength' => TelegramValidator::MAX_LENGTH
+                    ]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('telegram')
+                ) ?>
+
+                <?php if ($user->getTelegram()): ?>
+                    <p>
+                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                            'advert[main_telegram]',
+                            1, 0,
+                            $advert->getMainTelegram()
+                        ) ?>
+                        <label for="label_main_telegram">
+                            Использовать для связи основной Telegram пользователя
+                            <b><?= $user->getTelegram() ?></b>
+                        </label>
+                    </p>
+                <?php else: ?>
+                    <?= $this->getHelper(Form::class)->inputHidden(
+                        'advert[main_telegram]', 0
+                    )->getHtml() ?>
+                <?php endif; ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Skype:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'advert[skype]',
+                    $advert->getSkype(),
+                    ['maxlength' => StringLengthValidator::MD5_MAX_LENGTH]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('skype')
+                ) ?>
+
+                <?php if ($user->getSkype()): ?>
+                    <p>
+                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                            'advert[main_skype]',
+                            1, 0,
+                            $advert->getMainSkype(),
+                            ['id' => 'label_main_skype']
+                        ) ?>
+                        <label for="label_main_skype">
+                            Использовать для связи основной Skype пользователя
+                            <b><?= $user->getSkype() ?></b>
+                        </label>
+                    </p>
+                <?php else: ?>
+                    <?= $this->getHelper(Form::class)->inputHidden(
+                        'advert[main_skype]', 0
+                    )->getHtml() ?>
+                <?php endif; ?>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <small>Местоположение, в котором будет проходить сделка, осмотр объектов сделки или в котором находится
+                    объект сделки:
+                </small>
+            </td>
+            <td>
+                <p>
+                    <span id="js_country_select_wrap"></span>
+                    <?= $this->getHelper(Form::class)->getFieldError(
+                        $this->getErrors()->get('place_country')
+                    ) ?>
+                </p>
+                <p>
+                    <span id="js_region_select_wrap"></span>
+                    <?= $this->getHelper(Form::class)->getFieldError(
+                        $this->getErrors()->get('place_region')
+                    ) ?>
+                </p>
+                <p>
+                    <span id="js_city_select_wrap"></span>
+                    <?= $this->getHelper(Form::class)->getFieldError(
+                        $this->getErrors()->get('place_city')
+                    ) ?>
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputHidden(
+                    'advert[id]',
+                    $advert->getId()
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputSubmit(
+                    'save_changes',
+                    $this->getLang()->get('content.save_changes')
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                    'return_on_page',
+                    1, 0,
+                    $return_on_page,
+                    ['id' => 'label_return_on_page']) ?>
+
+                <?= $this->getHelper(Form::class)->label(
+                    $this->getLang()->get('content.return_to_this_page'),
+                    'label_return_on_page'
+                )->getHtml() ?>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <?php if ($advert->getThumbnailsList()->count()): ?>
+        <?php foreach ($advert->getThumbnailsList() as $thumbnail): ?>
+            <input type="hidden" name="thumbnail[]" value="<?= $thumbnail->getId() ?>">
+        <?php endforeach; ?>
+    <?php endif; ?>
+</form>
+
+<table class="edit">
+    <thead>
+    <tr>
+        <th colspan="2">Изображения</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td></td>
+        <td>
+            <div id="uploaded_images"<?php if ($advert->getThumbnailsList()->count()): ?> class="display"<?php endif; ?>>
+                <?php if ($advert->getThumbnailsList()->count()): ?>
+                    <?php
+                    /** @var Thumbnail $thumbnail */
+                    foreach ($advert->getThumbnailsList() as $thumbnail): ?>
+                        <span><img src="/i/small<?= $thumbnail->getFullHttpPath() ?>" alt=""><a
+                                    data-advert="<?= $thumbnail->getIdAdvert() ?>"
+                                    data-id="<?= $thumbnail->getId() ?>"
+                                    title="Удалить изображение" href="#"></a></span>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>
+            <iframe width="0" height="0" name="iframe"></iframe>
+
+            <form id="file_upload_form" method="post" enctype="multipart/form-data" target="iframe">
+                <div style="display: none" id="thumbnail_errors"
+                     class="description_before_fields extended_error arrow_bottom"></div>
+
+                <input type="hidden" name="MAX_FILE_SIZE" value="<?= Strings::getBytesFromString(
+                    Registry::getInstance()->get('UPLOAD.MAX_FILE_SIZE')
+                ); ?>">
+
+                Загрузить изображение: <input type="file" name="file" id="file"
+                                              accept="image/jpeg,image/jpg,image/png,image/gif,image/pjpeg">
+                <?php if ($advert->getThumbnailsList()->count() == Registry::getInstance()->get('UPLOAD.MAX_FILES_COUNT')): ?>
+                    <div class="description_before_fields extended_error arrow_top">
+                        Загружено максимально-допустимое количество изображений.
+                    </div>
+                <?php endif; ?>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        Krugozor.Location.addCheckedUserLocation(1, '<?=$advert->getPlaceCountry()?>');
+        Krugozor.Location.addCheckedUserLocation(2, '<?=$advert->getPlaceRegion()?>');
+        Krugozor.Location.addCheckedUserLocation(3, '<?=$advert->getPlaceCity()?>');
+
+        var select_country_attributes = {
+            name: 'advert[place_country]',
+            value: '<?=$advert->getPlaceCountry()?>'
+        };
+        var selectCountryObj = Krugozor.Location.createLocation(select_country_attributes, 'Выберите страну проживания');
+        document.getElementById('js_country_select_wrap').appendChild(selectCountryObj.SelectElement);
+
+        var select_region_attributes = {
+            name: 'advert[place_region]',
+            value: '<?=$advert->getPlaceRegion()?>'
+        };
+        var selectRegionObj = Krugozor.Location.createLocation(select_region_attributes, 'Выберите регион проживания');
+        document.getElementById('js_region_select_wrap').appendChild(selectRegionObj.SelectElement);
+
+        var select_city_attributes = {
+            name: 'advert[place_city]',
+            value: '<?=$advert->getPlaceCity()?>'
+        };
+        var selectCityObj = Krugozor.Location.createLocation(select_city_attributes, 'Выберите город проживания');
+        document.getElementById('js_city_select_wrap').appendChild(selectCityObj.SelectElement);
+
+        selectCountryObj.create(1, 0);
+        selectRegionObj.create(2, <?=(int) $advert->getPlaceCountry()?>);
+        selectCityObj.create(3, <?=(int) $advert->getPlaceRegion()?>);
+    });
+</script>
+
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

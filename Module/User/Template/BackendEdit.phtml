@@ -1,0 +1,515 @@
+<?php
+
+use Krugozor\Cover\CoverArray;
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Group\Model\Group;
+use Krugozor\Framework\Module\User\Model\User;
+use Krugozor\Framework\Module\User\Type\UserSex;
+use Krugozor\Framework\Validator\StringLengthValidator;
+use Krugozor\Framework\Validator\TelegramValidator;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+$return_on_page = $this->getRequest()->getRequest('return_on_page', Request::SANITIZE_INT);
+
+/** @var CoverArray $groupsList */
+$groupsList = $this->getStorage()->offsetGet('groupsList');
+
+/** @var User $user */
+$user = $this->getStorage()->offsetGet('user');
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+    ]) ?>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.ajax.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.locations.js') ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+
+<form method="post" action="<?= $this->getRequest()->getRequestUri()->getEscapeUriValue() ?>">
+
+    <table class="edit">
+        <thead>
+        <tr>
+            <th colspan="2">
+                <?php if ($user->getId()): ?>
+                    Редактирование данных пользователя
+                <?php else: ?>
+                    Добавление пользователя
+                <?php endif; ?>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td class="compulsory">
+                Пользователь активен:
+            </td>
+            <td>
+                <?php
+                $select = $this->getHelper(Form::class)->inputSelect('user[active]', $user->getActive());
+                $select->addOption($this->getHelper(Form::class)->inputOption(1, $this->getLang()->get('content.yes')));
+                $select->addOption($this->getHelper(Form::class)->inputOption(0, $this->getLang()->get('content.no')));
+                echo $select->getHtml();
+                ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('active')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="compulsory">
+                Принадлежность к административной группе:
+            </td>
+            <td>
+                <?php
+                $select = $this->getHelper(Form::class)->inputSelect('user[group]', $user->getGroup());
+                $select->addOption(
+                    $this->getHelper(Form::class)->inputOption(
+                        0, $this->getLang()->get('content.select_value')
+                    )
+                );
+                /** @var Group $group */
+                foreach ($groupsList as $group):
+                    $select->addOption(
+                        $this->getHelper(Form::class)->inputOption(
+                            $group->getId(),
+                            $group->getName()
+                        )
+                    );
+                endforeach;
+                echo $select->getHtml();
+                ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('group')
+                ) ?>
+            </td>
+        </tr>
+
+        <?php if ($user->getId()): ?>
+            <tr>
+                <td>
+                    ID пользователя:
+                </td>
+                <td><?= $user->getId() ?></td>
+            </tr>
+
+            <tr>
+                <td>
+                    UID:
+                </td>
+                <td>
+                    <a target="_blank"
+                       href="/advert/backend-main/?unique_user_cookie_id=<?= $user->getUniqueCookieId() ?>">
+                        <?= $user->getUniqueCookieId() ?>
+                    </a>
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    Salt:
+                </td>
+                <td>
+                    <?= $user->getSalt() ?>
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    IP пользователя:
+                </td>
+                <td>
+                    <a target="_blank" href="/user/backend-main/?keyword=<?= $user->getIp() ?>&colsearch=user_ip">
+                        <?= $user->getIp() ?>
+                    </a>
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    Дата регистрации:
+                </td>
+                <td><?= $user->getRegdate()->formatAsMysqlDatetime() ?>
+                </td>
+            </tr>
+
+            <?php if ($user->getVisitdate()): ?>
+                <tr>
+                    <td>
+                        Последнее посещение:
+                    </td>
+                    <td><?= $user->getVisitdate()->formatAsMysqlDatetime() ?></td>
+                </tr>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        <tr>
+            <td class="compulsory">
+                Логин пользователя:
+            </td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'user[login]',
+                    $user->getLogin(),
+                    ['maxlength' => 255]
+                )->getHtml() ?>
+
+                <?php if ($user->getId()): ?>
+                    <div>
+                        Внимание! Изменять логин пользователя допускается только лишь по просьбе пользователя и указания
+                        пользователем нового логина!
+                    </div>
+                <?php endif; ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('login')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="compulsory">
+                Пароль пользователя:
+            </td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'user[password_1]',
+                    $this->getStorage()->offsetGet('password_1'),
+                    ['maxlength' => 255, 'id' => 'user_password_1']
+                )->getHtml() ?>
+
+                <?php if ($user->getId()): ?>
+                    <p>
+                        Внимание! Изменять пароль пользователя допускается только лишь по просьбе пользователя и
+                        указания пользователем нового пароля!
+                        <br><br>Если не хотите менять пароль, то не заполняйте это поле!
+                    </p>
+                <?php endif; ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('password_1')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="compulsory">
+                Повторите пароль пользователя:
+            </td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'user[password_2]',
+                    $this->getStorage()->offsetGet('password_2'),
+                    ['maxlength' => 255, 'id' => 'user_password_2']
+                )->getHtml() ?>
+
+                <?php if ($user->getId()): ?>
+                    <div>Если не хотите менять пароль, то не заполняйте это поле!</div>
+                <?php endif; ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('password_2')
+                ) ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('password')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="compulsory">
+                Email пользователя:
+            </td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'user[email]',
+                    $user->getEmail()->getValue(),
+                    ['maxlength' => 255]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('email')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="compulsory">
+                Имя пользователя:
+            </td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'user[first_name]',
+                    $user->getFirstName(),
+                    [
+                        'maxlength' => 30,
+                        'class' => 'textSmall',
+                        'onkeyup' => 'this.value = Krugozor.Helper.String.ucfirst(this.value)'
+                    ]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('first_name')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                Фамилия пользователя:
+            </td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'user[last_name]',
+                    $user->getLastName(),
+                    [
+                        'maxlength' => 30,
+                        'onkeyup' => 'this.value = Krugozor.Helper.String.ucfirst(this.value)'
+                    ]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('last_name')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="compulsory">
+                Возраст пользователя:
+            </td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputSelectIntegerValues(
+                    'user[age_day]', 1, 31, $user->getAgeDay()
+                )->getHtml() ?>
+
+                <?php $select = $this->getHelper(Form::class)->inputSelect(
+                    'user[age_month]',
+                    $user->getAgeMonth(),
+                );
+
+                $select->addOption(
+                    $this->getHelper(Form::class)->inputOption(
+                        0, $this->getLang()->get('content.select_value')
+                    )
+                );
+                foreach ($this->getLang()->get('content.date.months_genitive') as $key => $value):
+                    $select->addOption(
+                        $this->getHelper(Form::class)->inputOption($key, $value)
+                    );
+                endforeach;
+                echo $select->getHtml();
+                ?>
+
+                <?= $this->getHelper(Form::class)->inputSelectYears(
+                    'user[age_year]',
+                    $user->getAgeYear(),
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('age')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="compulsory">
+                Пол пользователя:
+            </td>
+            <td class="radiobuttons_classic">
+                <?php foreach (UserSex::TYPES as $sex_key => $sex_value): ?>
+                    <?= $this->getHelper(Form::class)->inputRadio(
+                    'user[sex]',
+                    $sex_key,
+                    $user->getSex()->getValue(),
+                    ['id' => 'user_sex_' . $sex_key]
+                )->getHtml() ?><!--
+                --><?= $this->getHelper(Form::class)->label(
+                        $sex_value, 'user_sex_' . $sex_key
+                    )->getHtml() ?>&nbsp;
+                <?php endforeach; ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('sex')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                Регион пользователя:
+            </td>
+            <td>
+                <p>
+                    <span id="js_country_select_wrap"></span>
+                    <?= $this->getHelper(Form::class)->getFieldError(
+                        $this->getErrors()->get('country')
+                    ) ?>
+                </p>
+                <p>
+                    <span id="js_region_select_wrap"></span>
+                    <?= $this->getHelper(Form::class)->getFieldError(
+                        $this->getErrors()->get('region')
+                    ) ?>
+                </p>
+                <p>
+                    <span id="js_city_select_wrap"></span>
+                    <?= $this->getHelper(Form::class)->getFieldError(
+                        $this->getErrors()->get('city')
+                    ) ?>
+                </p>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                Телефон пользователя:
+            </td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'user[phone]',
+                    $user->getPhone(),
+                    ['maxlength' => 255]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('phone')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                Telegram пользователя:
+            </td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'user[telegram]',
+                    $user->getTelegram(),
+                    [
+                        'class' => 'textSmall',
+                        'maxlength' => TelegramValidator::MAX_LENGTH
+                    ]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('telegram')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                URL пользователя:
+            </td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'user[url]',
+                    $user->getUrl()->getValue(),
+                    ['maxlength' => 255]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('url')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                Skype пользователя:
+            </td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'user[skype]',
+                    $user->getSkype(),
+                    ['maxlength' => StringLengthValidator::MD5_MAX_LENGTH]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('skype')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td></td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputHidden(
+                    'user[id]',
+                    $user->getId()
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputSubmit(
+                    'submit',
+                    $this->getLang()->get('content.save_changes')
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                    'return_on_page', 1, 0, $return_on_page, ['id' => 'label_return_on_page']
+                ) ?><!--
+                --><?= $this->getHelper(Form::class)->label(
+                    $this->getLang()->get('content.return_to_this_page'), 'label_return_on_page'
+                )->getHtml() ?>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        Krugozor.Location.addCheckedUserLocation(1, '<?= $user->getCountry() ?>');
+        Krugozor.Location.addCheckedUserLocation(2, '<?= $user->getRegion() ?>');
+        Krugozor.Location.addCheckedUserLocation(3, '<?= $user->getCity() ?>');
+
+        var select_country_attributes = {
+            name: 'user[country]',
+            value: '<?= $user->getCountry() ?>'
+        };
+        var selectCountryObj = Krugozor.Location.createLocation(select_country_attributes, 'Выберите страну проживания');
+        document.getElementById('js_country_select_wrap').appendChild(selectCountryObj.SelectElement);
+
+        var select_region_attributes = {
+            name: 'user[region]',
+            value: '<?= $user->getRegion() ?>'
+        };
+        var selectRegionObj = Krugozor.Location.createLocation(select_region_attributes, 'Выберите регион проживания');
+        document.getElementById('js_region_select_wrap').appendChild(selectRegionObj.SelectElement);
+
+        var select_city_attributes = {
+            name: 'user[city]',
+            value: '<?= $user->getCity() ?>'
+        };
+        var selectCityObj = Krugozor.Location.createLocation(select_city_attributes, 'Выберите город проживания');
+        document.getElementById('js_city_select_wrap').appendChild(selectCityObj.SelectElement);
+
+        selectCountryObj.create(1, 0);
+        selectRegionObj.create(2, <?= (int) $user->getCountry() ?>);
+        selectCityObj.create(3, <?= (int) $user->getRegion() ?>);
+    });
+</script>
+
+</body>
+</html>

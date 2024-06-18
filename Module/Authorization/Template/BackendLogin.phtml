@@ -1,0 +1,144 @@
+<?php
+
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Module\User\Model\User;
+use Krugozor\Framework\Statical\Strings;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+/** @var User $userModel */
+$userModel = $this->getStorage()->get('userModel');
+
+$autologin = $this->getStorage()->get('autologin');
+$ml_autologin = $this->getStorage()->get('ml_autologin');
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+        'authorization' => ['backend-login.css'],
+    ]) ?>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+    <?= $this->getJs('authorization', 'login.js') ?>
+
+</head>
+<body>
+
+<?php
+
+if ($this->getCurrentUser()->checkAccesses(
+    $this->getRequest()->getModuleName()->getCamelCaseStyle(),
+    $this->getRequest()->getControllerName()->getCamelCaseStyle()
+)): ?>
+
+    <?php include $this->getRealTemplatePath('Common/Notification') ?>
+    <?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+
+<?php else: ?>
+
+    <section>
+        <div>
+            <?php include $this->getRealTemplatePath('Common/Notification') ?>
+
+            <header><h1><?= $this->getLang()->get('title')->item(1) ?></h1></header>
+
+            <form name="auth_form" method="post"
+                  action="<?= $this->getRequest()->getRequestUri()->getEscapeUriValue() ?>">
+
+                <?php if ($error = $this->getErrors()->get('authorization')): ?>
+                    <div class="field_row_fake">
+                        <div></div>
+                        <div class="group">
+                            <?= $this->getHelper(Form::class)->getFieldError($error, 'arrow_bottom') ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <div class="field_row">
+                    <label class="compulsory" for="user_login">
+                        <?= $this->getLang()->get('content.login') ?>:
+                    </label>
+                    <div class="group">
+                        <?= $this->getHelper(Form::class)->inputText(
+                            'user[login]',
+                            $userModel->getLogin(),
+                            ['id' => 'user_login']
+                        )->getHtml() ?>
+
+                        <?= $this->getHelper(Form::class)->getFieldError(
+                            $this->getErrors()->get('login')
+                        ) ?>
+                    </div>
+                </div>
+
+                <div class="field_row">
+                    <label class="compulsory" for="user_login">
+                        <?= $this->getLang()->get('content.password') ?>:
+                    </label>
+                    <div class="group">
+                        <?= $this->getHelper(Form::class)->inputPassword(
+                            'user[password]',
+                            '',
+                            ['id' => 'user_password']
+                        )->getHtml() ?>
+
+                        <?= $this->getHelper(Form::class)->getFieldError(
+                            $this->getErrors()->get('password')
+                        ) ?>
+                    </div>
+                </div>
+
+                <div class="field_row">
+                    <label for="autologin">
+                        <?= $this->getLang()->get('content.remember_password') ?>
+                    </label>
+                    <div class="group">
+                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                            'autologin',
+                            1, 0,
+                            $autologin,
+                            ['id' => 'autologin']
+                        ) ?>
+
+                        <div id="change_cookie_days" class="<?php if ($autologin): ?>show<?php endif; ?>">
+                            <?= Strings::createMessageFromParams(
+                                $this->getLang()->get('content.remember_password_description'),
+                                ['days' => $ml_autologin],
+                                false
+                            ) ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field_row_fake">
+                    <div></div>
+                    <div class="group">
+                        <?= $this->getHelper(Form::class)->inputHidden(
+                            'ml_autologin',
+                            $ml_autologin,
+                            ['id' => 'ml_autologin']
+                        )->getHtml() ?>
+
+                        <?= $this->getHelper(Form::class)->inputSubmit(
+                            'submit',
+                            $this->getLang()->get('content.login_in_panel')
+                        )->getHtml() ?>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </section>
+
+<?php endif; ?>
+
+</body>
+</html>

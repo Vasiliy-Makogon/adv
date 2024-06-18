@@ -1,0 +1,12 @@
+.datatable td:nth-child(3),
+.datatable td:nth-child(4),
+.datatable td:nth-child(5),
+.datatable td:nth-child(6),
+.datatable td:nth-child(7) {
+    text-align: center;
+}
+
+.datatable td[data-content-yes-no="0"] {
+    font-weight: bold;
+    color:#cc0000 !important;
+}

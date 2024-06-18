@@ -1,0 +1,18 @@
+div.header_big,
+div.header_medium {
+    text-align: center;
+    color:#666666;
+}
+div.header_big {
+    font-size: 15vh;
+    font-weight: bold;
+}
+div.header_medium {
+    font-size: 12vh;
+}
+
+p.not_found_description {
+    text-align: center;
+    font-size: 4vh;
+    margin: 1.5vh 0;
+}

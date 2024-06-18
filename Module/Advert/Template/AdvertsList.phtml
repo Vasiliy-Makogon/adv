@@ -1,0 +1,569 @@
+<?php
+
+use Krugozor\Cover\CoverArray;
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Advert\Model\Advert;
+use Krugozor\Framework\Module\Advert\Model\Thumbnail;
+use Krugozor\Framework\Module\Advert\PaymentActionsEnum;
+use Krugozor\Framework\Module\Advert\Type\AdvertType;
+use Krugozor\Framework\Module\Category\Model\Category;
+use Krugozor\Framework\Module\User\Model\City;
+use Krugozor\Framework\Module\User\Model\Country;
+use Krugozor\Framework\Module\User\Model\Region;
+use Krugozor\Framework\Module\User\Model\User;
+use Krugozor\Framework\Registry;
+use Krugozor\Framework\View;
+
+/* @var $this View */
+
+$counter = 0;
+
+$searchKeyword = $this->getRequest()->getRequest('keyword', Request::SANITIZE_STRING_FULLTEXT);
+
+$advertsList = $advertsList ?? $this->getStorage()->offsetGet('advertsList');
+
+$isFrontendAdvertViewController = $this->getStorage()->offsetGet('isFrontendAdvertViewController');
+$isFrontendCategoryListController = $this->getStorage()->offsetGet('isFrontendCategoryListController');
+$isFrontendUserAdvertsListController = $this->getStorage()->offsetGet('isFrontendUserAdvertsListController');
+$isFrontendUserPublicAdvertsListController = $this->getStorage()->offsetGet('isFrontendUserPublicAdvertsListController');
+$isIndexController = $this->getStorage()->offsetGet('isIndexController');
+
+/** @var CoverArray $advertsList */
+if ($advertsList && $advertsList->count()): ?>
+    <?php
+    $bannerBlockId = 1;
+
+    /**
+     * @var Advert $advert
+     * @var User $user
+     * @var Country $country
+     * @var Region $region
+     * @var City $city
+     * @var Category $category
+     */
+    foreach ($advertsList->getDataAsArray() as $data):
+        // Выборка для каталога не выбирает объекты пользователей.
+        // Сл-но наличие $user далее по коду как флаг, что
+        if (!isset($data['user'])) {
+            $data['user'] = null;
+        }
+
+        [
+            'advert' => $advert,
+            'user' => $user,
+            'country' => $country,
+            'region' => $region,
+            'city' => $city,
+            'category' => $category,
+        ] = $data;
+
+        $counter++;
+        ?>
+        <li>
+            <div id="advert<?= $advert->getId() ?>" class="advert<?php
+            if ($advert->getIsVip() && !$isFrontendAdvertViewController): ?> vip<?php
+            endif; ?><?php
+            if ($advert->getIsSpecial() && !$isFrontendAdvertViewController): ?> special<?php
+            endif; ?>">
+                <article>
+                    <div class="left_column">
+                        <div class="left_column_content">
+
+                            <?php if ($isFrontendAdvertViewController): ?>
+
+                                <?php if (!$advert->getThumbnailsList()->count()): ?>
+                                    <div class="no_photo"></div>
+                                <?php else:
+                                    foreach ($advert->getThumbnailsList() as $k => $thumbnail):
+                                        /** @var Thumbnail $thumbnail */
+                                        ?>
+                                        <div>
+                                            <a class="thumbnails" href="/i/800x800<?= $thumbnail->getFullHttpPath() ?>">
+                                                <img loading="lazy"
+                                                     alt="<?= Format::outPut($advert->getHeader()) ?>"
+                                                     src="/i/<?= ($k == 0 ? '800x800' : 'small') ?><?= $thumbnail->getFullHttpPath() ?>">
+                                            </a>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+
+                            <?php else: ?>
+
+                                <div class="<?php if (!$advert->getDenormalizationThumbnailsList()->count()): ?> no_photo<?php endif; ?>">
+                                    <?php if ($advert->getDenormalizationThumbnailsList()->count()): ?>
+                                        <a href="/advert/<?= $advert->getId() ?>.xhtml">
+                                            <img loading="lazy"
+                                                 alt="<?= Format::outPut($advert->getHeader()) ?>"
+                                                 src="/i/small<?= $advert->getDenormalizationThumbnailsList()->item(0)->getFullHttpPath() ?>">
+                                            <span><span><?= $advert->getThumbnailCount() ?></span></span>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+
+                            <?php endif; ?>
+
+                        </div> <!-- /left_column_content -->
+                    </div> <!-- /left_column -->
+
+                    <div class="right_column">
+                        <div class="right_column_content">
+
+                            <!--noindex-->
+                            <span class="price">
+                                <?php if ($advert->getFree()): ?>
+                                    <?php if ($advert->getType()->getValue() == AdvertType::TYPE_SALE): ?>
+                                        Отдам даром
+                                    <?php else: ?>
+                                        Приму в дар
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <?php if (!$advert->getPrice()): ?>
+                                        Договорная цена
+                                    <?php else: ?>
+                                        <strong><?= Format::prettyNumber((float) $advert->getPrice()) ?></strong> <?= $advert->getPriceType()->getAsSymbol() ?>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </span>
+                            <!--/noindex-->
+
+                            <header>
+                                <?php if ($isFrontendAdvertViewController): ?>
+                                    <h2><?= Format::outPut($advert->getHeader()) ?></h2>
+                                <?php else: ?>
+                                    <h3 class="<?php if ($advert->getIsVip() || $advert->getIsSpecial()): ?>add_header_icon add_star_icon<?php endif; ?>">
+                                        <a
+                                                href="/advert/<?= $advert->getId() ?>.xhtml"
+                                        ><?= Format::outPut($advert->getHeader()) ?></a></h3>
+                                    <?php if ($advert->getBalance()): ?>
+                                        <div class="balance"><?= $advert->getBalance() ?> шт. в наличии</div>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </header>
+
+                            <div class="field_row_fake">
+                                <!--noindex--><div><span>Категория:</span></div><!--/noindex-->
+                                <div class="group">
+                                    <?php
+                                    $categoryUrlForAdvert = sprintf(
+                                        '/%s/%s/%s/categories%s',
+                                        $country->getNameEn(), $region->getNameEn(), $city->getNameEn(), $category->getUrl()
+                                    );
+
+                                    if (
+                                        $categoryUrlForAdvert !== $this->getRequest()->getCanonicalRequestUri()->getSimpleUriValue()
+                                        or
+                                        $isFrontendAdvertViewController
+                                    ): ?>
+                                        <a
+                                                title="Показать все объявления в категории &laquo;<?= $category->getName() ?> в <?=$city->getNameRu2()?>&raquo;"
+                                                href="<?= $categoryUrlForAdvert ?>">
+                                            <?= $category->getName() ?> в <?= $city->getNameRu2() ?>
+                                        </a>
+                                    <?php else: ?>
+                                        <!--noindex-->
+                                        <span class="category_without_link">
+                                                    <?= $category->getName() ?> в <?= $city->getNameRu2() ?>
+                                                </span>
+                                        <!--/noindex-->
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div class="field_row_fake">
+                                <!--noindex--><div><span>Регион:</span></div><!--/noindex-->
+                                <div class="group">
+                                    <?php if ($city->getId() && $region->getId() && $country->getId()): ?>
+                                        <?php if ($city->getId()): ?>
+                                            <a title="Показать все объявления в <?= $city->getNameRu2() ?>"
+                                               href="/<?= $country->getNameEn() ?>/<?= $region->getNameEn() ?>/<?= $city->getNameEn() ?>/categories/"><?= $city->getNameRu() ?></a>,<?php endif; ?>
+                                        <?php if ($region->getId()): ?>
+                                            <a title="Показать все объявления в <?= $region->getNameRu2() ?>"
+                                               href="/<?= $country->getNameEn() ?>/<?= $region->getNameEn() ?>/categories/"><?= $region->getNameRu() ?></a>,<?php endif; ?>
+                                        <?php if ($country->getId()): ?>
+                                            <a title="Показать все объявления в <?= $country->getNameRu2() ?>"
+                                               href="/<?= $country->getNameEn() ?>/categories/"><?= $country->getNameRu() ?></a>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <?php if ($isFrontendAdvertViewController): ?>
+                                <p><?= Format::outPut($advert->getText()) ?></p>
+                            <?php endif; ?>
+
+                            <?php if (!$isFrontendAdvertViewController && !$isFrontendUserAdvertsListController): ?>
+                                <p><?= Format::outPut($advert->getText(), false) ?></p>
+                            <?php endif; ?>
+
+                            <?php if ($isFrontendAdvertViewController): ?>
+                                <!--noindex-->
+
+                                <?php if ($advert->getBalance()): ?>
+                                    <div class="field_row_fake contact balance">
+                                        <div><span>В наличии, шт.:</span></div>
+                                        <div class="group">
+                                            <?= $advert->getBalance() ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if ($advert->getMainUserName() && $user->getFullName()): ?>
+                                    <div class="field_row_fake contact user">
+                                        <div><span>Контактное лицо:</span></div>
+                                        <div class="group">
+                                            <?= Format::outPut($user->getFullName()) ?>
+                                            <?php if ($user->getType()->getValue()): ?>
+                                                (<?= $user->getType()->getAsText() ?>)
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php elseif (!$advert->getMainUserName() && $advert->getUserName()): ?>
+                                    <div class="field_row_fake contact user">
+                                        <div><span>Контактное лицо:</span></div>
+                                        <div class="group">
+                                            <?= Format::outPut($advert->getUserName()) ?>
+                                            <?php if ($user->getType()->getValue()): ?>
+                                                (<?= $user->getType()->getAsText() ?>)
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if (
+                                    $advert->getMainPhone() && $user->getPhone() or
+                                    !$advert->getMainPhone() && $advert->getPhone()
+                                ): ?>
+                                    <div class="field_row_fake contact phone">
+                                        <div><span>Телефон:</span></div>
+                                        <div class="group">
+                                            <span class="imitation_link view_phone"
+                                                  data-id="<?= $advert->getId() ?>">Показать</span>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if ($advert->getMainEmail() && $user->getEmail()->getValue()): ?>
+                                    <div class="field_row_fake contact email">
+                                        <div><span>Email-адрес:</span></div>
+                                        <div class="group">
+                                            <span class="imitation_link view_email"
+                                                  data-id="<?= $advert->getId() ?>"
+                                                  data-hash="<?= $user->getEmail()->getMailHashForAccessView() ?>">Показать</span>
+                                        </div>
+                                    </div>
+                                <?php elseif (!$advert->getMainEmail() && $advert->getEmail()->getValue()): ?>
+                                    <div class="field_row_fake contact email">
+                                        <div><span>Email-адрес:</span></div>
+                                        <div class="group">
+                                            <span class="imitation_link view_email"
+                                                  data-id="<?= $advert->getId() ?>"
+                                                  data-hash="<?= $advert->getEmail()->getMailHashForAccessView() ?>">Показать</span>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if ($advert->getMainUrl() && $user->getUrl()->getValue()): ?>
+                                    <div class="field_row_fake contact url">
+                                        <div><span>Веб-сайт:</span></div>
+                                        <div class="group">
+                                            <span data-url="<?= $user->getUrl()->getValue() ?>"
+                                                  class="imitation_link js-imitation-link"><?= $user->getUrl()->getNiceAnchor() ?></span>
+                                        </div>
+                                    </div>
+                                <?php elseif (!$advert->getMainUrl() && $advert->getUrl()->getValue()): ?>
+                                    <div class="field_row_fake contact url">
+                                        <div><span>Веб-сайт:</span></div>
+                                        <div class="group">
+                                            <span data-url="<?= $advert->getUrl()->getValue() ?>"
+                                                  class="imitation_link js-imitation-link"><?= $advert->getUrl()->getNiceAnchor() ?></span>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if ($advert->getMainTelegram() && $user->getTelegram()): ?>
+                                    <div class="field_row_fake contact telegram">
+                                        <div><span>Telegram:</span></div>
+                                        <div class="group">
+                                            <a target="_blank"
+                                               href="https://t.me/<?= $user->getTelegram() ?>">
+                                                <?= $user->getTelegram() ?>
+                                            </a>
+                                        </div>
+                                    </div>
+                                <?php elseif (!$advert->getMainTelegram() && $advert->getTelegram()): ?>
+                                    <div class="field_row_fake contact telegram">
+                                        <div><span>Telegram:</span></div>
+                                        <div class="group">
+                                            <a target="_blank"
+                                               href="https://t.me/<?= $advert->getTelegram() ?>">
+                                                <?= $advert->getTelegram() ?>
+                                            </a>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if ($advert->getMainSkype() && $user->getSkype()): ?>
+                                    <div class="field_row_fake contact skype">
+                                        <div><span>Skype:</span></div>
+                                        <div class="group">
+                                            <a href="skype:<?= $user->getSkype() ?>?call"><?= $user->getSkype() ?></a>
+                                        </div>
+                                    </div>
+                                <?php elseif (!$advert->getMainSkype() && $advert->getSkype()): ?>
+                                    <div class="field_row_fake contact skype">
+                                        <div><span>Skype:</span></div>
+                                        <div class="group">
+                                            <a href="skype:<?= $advert->getSkype() ?>?call"><?= $advert->getSkype() ?></a>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if ($user->getContact() && $advert->getUseContact()): ?>
+                                    <div class="field_row_fake contact contacts">
+                                        <div><span>Контактная информация:</span></div>
+                                        <div class="group">
+                                            <?= Format::outPut($user->getContact()) ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                                <!--/noindex-->
+                            <?php endif; ?>
+
+                        </div> <!-- /right_column_content-->
+                    </div><!-- /right_column-->
+                </article>
+
+                <aside class="<?php if ($isFrontendAdvertViewController && $advert->getThumbnailsList()->count()): ?>has_photo<?php endif; ?>">
+                    <ul>
+                        <?php if ($advert->getScore()): ?>
+                            <!--noindex-->
+                            <li class="advert_search">
+                                Релевантность совпадения по поисковому запросу
+                                &laquo;<?= Format::outPut($searchKeyword) ?>&raquo;: <?= $advert->getScore() ?>
+                            </li>
+                            <!--/noindex-->
+                        <?php endif; ?>
+
+                        <?php if (!$advert->getPayment() && $advert->belongToUser($this->getCurrentUser())): ?>
+                            <!--noindex-->
+                            <li class="advert_payment">
+                                <a title="Объявление отображается только Вам, оплатите услугу активации объявления!"
+                                   rel="nofollow"
+                                   href="<?= $advert->getMerchant()->getMerchantUrl(PaymentActionsEnum::ACTION_ACTIVATE) ?>"
+                                   class="space_nowrap">Необходима оплата
+                                    &mdash; <?= Registry::getInstance()->get('PAYMENTS.PAYMENT_ACTION_ACTIVATE') ?>
+                                    руб.!</a>
+                            </li>
+                            <!--/noindex-->
+                        <?php endif; ?>
+
+                        <?php
+                        if (
+                            Registry::getInstance()->get('PAYMENTS.ENABLED') &&
+                            !$advert->getIsVip() &&
+                            $advert->belongToUser($this->getCurrentUser())
+                        ): ?>
+                            <!--noindex-->
+                            <li class="advert_vip">
+                                <a title="Выделить объявление и поместить в линейку VIP-объявлений" rel="nofollow"
+                                   href="<?= $advert->getMerchant()->getMerchantUrl(PaymentActionsEnum::ACTION_TOP) ?>"
+                                   class="space_nowrap">Выделить и поднять за
+                                    <?=Registry::getInstance()->get('PAYMENTS.PAYMENT_ACTION_TOP')?> ₽</a>
+                            </li>
+                            <!--/noindex-->
+                        <?php endif; ?>
+
+                        <?php
+                        if (0 &&
+                            Registry::getInstance()->get('PAYMENTS.ENABLED') &&
+                            !$advert->getIsSpecial() &&
+                            $advert->belongToUser($this->getCurrentUser())
+                        ): ?>
+                            <!--noindex-->
+                            <li class="advert_special">
+                                <a title="Поместить объявление в блок Спецпредложений" rel="nofollow"
+                                   href="<?= $advert->getMerchant()->getMerchantUrl(PaymentActionsEnum::ACTION_SPECIAL) ?>"
+                                   class="space_nowrap">Спецпредложение</a>
+                            </li>
+                            <!--/noindex-->
+                        <?php endif; ?>
+
+                        <?php //if (!$this->getCurrentUser()->isGuest() && $advert->belongToRegisterUser($this->getCurrentUser())):
+                        ?>
+                        <!-- тут был блок Редактировать объявление -->
+                        <?php //endif;
+                        ?>
+
+                        <?php if ($isFrontendAdvertViewController || $isFrontendCategoryListController || $isFrontendUserAdvertsListController): ?>
+
+                            <?php if ($advert->belongToRegisterUser($this->getCurrentUser())): ?>
+
+                                <!--noindex-->
+                                <li class="edit_link">
+                                    <a class="space_nowrap" title="Редактировать объявление"
+                                       href="/advert/frontend-edit-advert/id/<?= $advert->getId() ?>/?referrer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue() ?>">Редактировать</a>
+                                </li>
+                                <!--/noindex-->
+
+                                <!--noindex-->
+                                <?php if ($advert->getExpireRestrictionUpdateCreateDate()->invert): ?>
+                                    <li class="up_link">
+                                        <a
+                                            <?php if (!$advert->getThumbnailCount()): ?>
+                                                onclick="alert('Поднять объявление в результатах поиска невозможно, т.к. для объявления не загружено изображение. Пожалуйста, загрузите для данного объявления изображение (нажав ссылку &laquo;Редактировать&raquo;).'); return false;"
+                                            <?php endif; ?>
+                                                title="Поднять объявление в результатах поиска. Данная функция гарантирует, что Ваше объявление увидят больше посетителей сайта. Применять данную опцию можно не чаще чем через один час."
+                                                href="/advert/frontend-up-advert/id/<?= $advert->getId() ?>/?referrer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue() ?>#advert<?= $advert->getId() ?>">
+                                            Поднять
+                                        </a>
+                                    </li>
+                                <?php else: ?>
+                                    <li class="up_link">
+                                        <span class="space_nowrap"
+                                              title="Для этого объявления данная функция будет доступна через <?= $advert->getExpireRestrictionUpdateCreateDate()->format('%H:%I') ?> мин.">
+                                            Поднять
+                                        </span>
+                                    </li>
+                                <?php endif; ?>
+                                <!--/noindex-->
+
+                                <!--noindex-->
+                                <?php if ($advert->getActive()): ?>
+                                    <li class="lock_link">
+                                        <a class="space_nowrap"
+                                           title="Приостановить показ объявления на сайте (закрыть доступ для всех)"
+                                           href="/advert/frontend-active-advert/id/<?= $advert->getId() ?>/?referrer=<?=urlencode('/advert/frontend-user-adverts-list/')?>">
+                                            Приостановить показ
+                                        </a>
+                                    </li>
+                                <?php else: ?>
+                                    <li class="lock-open_link">
+                                        <a class="space_nowrap"
+                                           title="Возобновить показ объявления на сайте (открыть доступ для всех)"
+                                           href="/advert/frontend-active-advert/id/<?= $advert->getId() ?>/?referrer=<?=urlencode('/advert/frontend-user-adverts-list/')?>">
+                                            Возобновить показ
+                                        </a>
+                                    </li>
+                                <?php endif; ?>
+                                <!--/noindex-->
+
+                                <!--noindex-->
+                                <li class="delete_link">
+                                    <?php
+                                    $str = Format::js(
+                                        'Вы действительно хотите удалить объявление «{title}»?',
+                                        ['title' => $advert->getHeader()]
+                                    );
+                                    ?>
+                                    <a class="space_nowrap" title="Безвозвратно удалить объявление"
+                                       onclick='return confirm(<?= $str ?>)'
+                                       href="/advert/frontend-delete-advert/id/<?= $advert->getId() ?>/<?php if (!$isFrontendAdvertViewController): ?>?referrer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue() ?><?php endif; ?>">
+                                        Удалить
+                                    </a>
+                                </li>
+                                <li class="advert_gp">
+                                    <a target="_blank" class="space_nowrap"
+                                       title="Проверка проиндексированности объявления в Google"
+                                       href="https://www.google.com/search?q=site%3A<?= urlencode(Registry::getInstance()->get('HOSTINFO.HOST') . '/advert/' . $advert->getId() . '.xhtml') ?>">
+                                        Google
+                                    </a>
+                                </li>
+                                <li class="advert_yp">
+                                    <a target="_blank" class="space_nowrap"
+                                       title="Проверка проиндексированности объявления в Yandex"
+                                       href="https://www.yandex.ru/search/?text=url%3A<?= urlencode(Registry::getInstance()->get('HOSTINFO.HOST') . '/advert/' . $advert->getId() . '.xhtml') ?>">
+                                        Yandex
+                                    </a>
+                                </li>
+                                <!--/noindex-->
+
+                            <?php endif; ?>
+
+                            <li class="advert_info">
+                                <!--noindex-->Размещено:<!--/noindex-->
+                                <time datetime="<?= $advert->getCreateDate()->format(DateTimeInterface::ATOM) ?>">
+                                    <?= $advert->getCreateDate()->formatDateForPeople() ?></time><?php
+                                if ($advert->belongToRegisterUser($this->getCurrentUser())): ?>,
+                                    <!--noindex-->просмотров: <?= $advert->getViewCount() ?>, ID объявления: <?= $advert->getId() ?><!--/noindex-->
+                                <?php endif; ?>
+                            </li>
+                        <?php else: ?>
+                            <li class="advert_info">
+                                <!--noindex-->Размещено:<!--/noindex-->
+                                <time datetime="<?= $advert->getCreateDate()->format(DateTimeInterface::ATOM) ?>">
+                                    <?= $advert->getCreateDate()->formatDateForPeople() ?>
+                                </time>
+                            </li>
+                        <?php endif; ?>
+
+                        <?php if ($this->getCurrentUser()->isAdministrator()): ?>
+
+                            <li class="edit_link">
+                                <a class="space_nowrap" rel="nofollow"
+                                   href="/advert/backend-edit/?id=<?= $advert->getId() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>">
+                                    Редактировать в админ
+                                </a>
+                            </li>
+
+                            <li class="delete_link">
+                                <?php
+                                $str = Format::js(
+                                    'Вы действительно хотите удалить объявление «{title}»?',
+                                    ['title' => $advert->getHeader()]
+                                );
+                                ?>
+                                <a class="space_nowrap" title="Безвозвратно удалить объявление"
+                                   onclick='return confirm(<?= $str ?>)'
+                                   href="/advert/backend-delete/?id=<?= $advert->getId() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue() ?>">
+                                    Удалить
+                                </a>
+                            </li>
+
+                            <?php if ($advert->getIdUser() != User::GUEST_USER_ID): ?>
+                                <li class="delete_user_link">
+                                    <?php
+                                    $str = Format::js('Вы действительно хотите удалить пользователя и все его объявления?');
+                                    ?>
+                                    <a class="space_nowrap"
+                                       title="Безвозвратно удалить пользователя и все его объявления"
+                                       onclick='return confirm(<?= $str ?>)'
+                                       href="/user/backend-delete/?id=<?= $advert->getIdUser() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue() ?>">
+                                        Удалить пользователя
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php if ($advert->getIdUser() != User::GUEST_USER_ID): ?>
+                                <li class="all_adverts">
+                                    <a class="space_nowrap" rel="nofollow"
+                                       href="/advert/backend-main/?user=<?= $advert->getIdUser() ?>">
+                                        Все объявления пользователя
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+
+                        <?php endif; ?>
+
+                    </ul>
+                </aside>
+            </div>
+        </li>
+
+        <?php if (0 && $counter % 10 == 0 && !$isFrontendUserAdvertsListController && !$isFrontendUserPublicAdvertsListController): ?>
+        <li>
+            <!-- Yandex.RTB R-A-6810960-3 -->
+            <div id="yandex_rtb_R-A-6810960-3-<?= $bannerBlockId ?>"></div>
+            <script>
+                window.yaContextCb.push(()=>{
+                    Ya.Context.AdvManager.render({
+                        "blockId": "R-A-6810960-3",
+                        "renderTo": "yandex_rtb_R-A-6810960-3-<?=$bannerBlockId?>"
+                    })
+                })
+            </script>
+        </li>
+        <?php $bannerBlockId++; endif; ?>
+
+    <?php endforeach; ?>
+
+<?php endif; ?>

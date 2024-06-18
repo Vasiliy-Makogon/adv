@@ -1,0 +1,268 @@
+:root {
+    /* https://colorscheme.ru/#3.31Tn2t.w0w0 */
+
+    --border-radius-common: 5px;
+    --blocks-bg-color: #f5f5f5; /* f0f0f0 */
+
+
+    /* Основной цвет */
+
+    --var-color-1: #336699;
+    --color-main-menu: var(--var-color-1);
+    --color-desing-blue: var(--var-color-1);
+    --color-primary-link-hover: var(--var-color-1);
+    --color-navigation-link-bg-hover: var(--var-color-1);
+
+    --var-color-2: #395773;
+    --color-primary-link: var(--var-color-2);
+
+    --var-color-3: #113B63;
+    --color-logo-description: var(--var-color-3);
+    --color-advert-view-table-link: var(--var-color-3);
+    --color-add-advert-to-this-category-link: var(--var-color-3);
+    --color-navigation-normal-link: var(--var-color-3);
+    --color-advert-view-table-legend: var(--var-color-3);
+    --color-secondary-link: var(--var-color-3);
+
+    --var-color-4: #669ACC;
+
+    --var-color-5: #81A7CC;
+    --form-border-color: #81A7CC;
+    --form-focus-outline-color: #81A7CC;
+
+
+    /* Вторичный Цвет A */
+
+    --var-color-6: #ECC442;
+    --var-color-7: #B19A51;
+    --var-color-8: #997A15;
+    --var-color-9: #F5D671;
+    --var-color-10: #F5DF94;
+    /* https://gradients.app/ru/color/f5df94 */
+    --var-color-10-light: #fdf9ea;
+
+
+    /* Вторичный Цвет В */
+
+    --var-color-11: #EC7942;
+    --color-logo: var(--var-color-11);
+
+    --var-color-12: #B17051;
+
+    --var-color-13: #994015;
+    --color-b-header: var(--var-color-13);
+
+    --var-color-14: #F59C71;
+    --var-color-15: #F5B494;
+
+    /* Прочее */
+
+    /* 000 */
+    --color-advert-view-table-text: #000;
+    --color-category-header-and-text: #000;
+
+    /* 666 */
+    --color-header-annotation: #666;
+    --color-category-description-first-page: #666;
+    --color-advert-text-in-list: #666;
+
+    --advert-bg-color: var(--var-color-10-light); /*#FFFDE6*/
+    --advert-vip-bg-color: #ffff9e; /* fff380 - ffff8f - ffff9e - ffffad*/
+    --form-bg-color: #E8F0FE;
+
+    --color-error: #E15D52;
+    --color-success: #008000;
+    --color-warning: var(--var-color-11);
+
+    /* Шрифты */
+
+    --font-size-10: 1rem; /* 10px */
+    --font-size-11: 1.1rem;
+    --font-size-12: 1.2rem;
+    --font-size-13: 1.3rem;
+    --font-size-14: 1.4rem;
+    --font-size-15: 1.5rem;
+    --font-size-16: 1.6rem;
+    --font-size-17: 1.7rem;
+    --font-size-18: 1.8rem;
+    --font-size-19: 1.9rem;
+    --font-size-20: 2rem;
+    --font-size-21: 2.1rem;
+    --font-size-22: 2.2rem; /* 22px */
+    --font-size-27: 2.7rem;
+    --font-size-28: 2.8rem;
+
+    /* 210 x 139  */
+    --image-small-width: 130px;
+    --image-small-height: 86px;
+
+    --image-medium-width-for-precent-25: 209px;
+    --image-medium-height-for-precent-25: 138px;
+
+    --image-medium-width-for-precent-33: 182px;
+    --image-medium-height-for-precent-33: 120px;
+}
+
+@font-face {
+    font-family: 'HandelGothicTL';
+    font-display: auto;
+    src: local('Handel Gothic TL'),
+    url('/fonts/local/HANDGOTN.woff2') format('woff2'),
+    url('/fonts/local/HANDGOTN.woff') format('woff');
+    font-style: normal;
+}
+
+section:target {
+    background-color: var(--advert-bg-color);
+}
+
+html, body {
+    width: auto;
+    height: auto;
+    background-color: #ffffff;
+    box-sizing: border-box;
+    font-size: 62.5%;
+    font-family: Graphik, Verdana, Geneva, Arial, Helvetica, sans-serif;
+    color: #000000;
+}
+
+body {
+    font-size: 1.2rem;
+}
+
+header {
+    background-color: var(--blocks-bg-color);
+    padding: 1rem;
+    margin: 0 0 1rem 0;
+    color: var(--color-category-header-and-text);
+    border-radius: var(--border-radius-common);
+}
+
+h1 {
+    font-size: var(--font-size-20);
+}
+
+h2 {
+    font-size: var(--font-size-19);
+}
+
+h3 {
+    font-size: var(--font-size-18);
+}
+
+h4 {
+    font-size: var(--font-size-17);
+}
+
+h5 {
+    font-size: var(--font-size-16);
+}
+
+h6 {
+    font-size: var(--font-size-15);
+}
+
+p {
+    margin: 0.5rem 0;
+}
+
+strong, b {
+    font-weight: bold;
+}
+
+small {
+    font-size: 90%;
+}
+
+em {
+    font-style: italic;
+}
+
+a {
+    cursor: pointer;
+}
+
+a:where(:link, :visited, :hover) {
+    text-decoration: underline;
+    color: var(--color-primary-link);
+}
+
+a:where(:active, :hover) {
+    text-decoration: none;
+    color: var(--color-primary-link-hover);
+}
+
+legend,
+fieldset {
+    border-radius: var(--border-radius-common);
+}
+
+fieldset {
+    padding: 1rem;
+    border: 1px solid #CCCCCC;
+    margin: 1rem 0;
+}
+
+legend {
+    background-color: var(--blocks-bg-color);
+    padding: 5px;
+    color: #994015;
+    font-size: var(--font-size-14);
+}
+
+select, input, label, button {
+    vertical-align: middle; /* разобраться с этим */
+}
+
+/* Стиль текстовых полей */
+select,
+input:not([type=checkbox]):not([type=radio]), /*:not([type=submit]):not([type=button]):not([type=reset])*/
+textarea {
+    padding: 0.7rem;
+    font-family: inherit;
+    border: 1px solid var(--form-border-color);
+    background-color: var(--form-bg-color);
+    border-radius: var(--border-radius-common);
+}
+
+input:where([type="text"], [type="number"], [type="password"], [type="email"], [type="url"]),
+textarea {
+    width: 80%;
+}
+
+@media screen and (max-width: 780px) {
+    input:where([type="text"], [type="number"], [type="password"], [type="email"], [type="url"]),
+    textarea {
+        width: 100%;
+    }
+}
+
+textarea {
+    min-height: 200px;
+    resize: none;
+    overflow-y: hidden;
+}
+
+input:where([type="text"], [type="number"], [type="password"], [type="email"], [type="url"]):focus,
+textarea:focus,
+select:focus {
+    box-shadow: 0 0 1rem #F5DF94;
+    outline: 1px solid var(--form-focus-outline-color);
+}
+
+input:where([type="submit"], [type="button"], [type="reset"]) {
+    background: linear-gradient(to bottom, var(--color-desing-blue) 30%, #113b63 100%);
+    border: none;
+    border-radius: var(--border-radius-common);
+    color: #fff;
+    cursor: pointer;
+    text-align: center;
+}
+
+input:where([type="submit"], [type="button"], [type="reset"]):hover {
+    background: linear-gradient(to bottom, var(--color-desing-blue) 30%, #395773 100%);
+}
+
+input:where([type="submit"], [type="button"], [type="reset"]):active {
+    background: linear-gradient(to bottom, #395773 30%, var(--color-desing-blue) 100%);
+}

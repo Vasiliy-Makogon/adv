@@ -1,0 +1,16 @@
+.content > article.two_column > .left_column {
+    flex-basis: 70%;
+    padding: 0 10px 0 0;
+}
+.content > article.two_column > .right_column {
+    flex-basis: 30%;
+}
+
+select[name="user[age_month]"] {
+    margin:0 5px;
+}
+@media screen and (max-width: 780px) {
+    select[name="user[age_month]"] {
+        margin:5px 0;
+    }
+}

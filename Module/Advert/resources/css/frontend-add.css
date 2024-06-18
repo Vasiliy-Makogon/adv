@@ -1,0 +1,10 @@
+div#advert_frontend-add .two_column .right_column .right_column_content,
+div#advert_frontend-add .two_column .left_column .left_column_content {
+    padding: 0 15px 10px 15px;
+}
+div#advert_frontend-add .two_column .right_column .right_column_content a,
+div#advert_frontend-add .two_column .left_column .left_column_content a {
+    text-align: center;
+    margin: 10px 0 20px 0;
+    display: block;
+}

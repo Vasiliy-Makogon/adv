@@ -1,0 +1,190 @@
+<?php
+
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Article\Model\Article;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+/** @var Article $article */
+$article = $this->getStorage()->get('article');
+
+/** @var int $return_on_page */
+$return_on_page = $this->getRequest()->getRequest('return_on_page', Request::SANITIZE_INT);
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+    ]) ?>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+    <?= $this->getJs() ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+
+<form method="post" action="<?= $this->getRequest()->getRequestUri()->getEscapeUriValue() ?>">
+
+    <table class="edit">
+        <thead>
+        <tr>
+            <th colspan="2">
+                <?php if ($article->getId()): ?>
+                    Редактирование статьи &laquo;<a target="_blank" href="<?= $article->getUrl(true) ?>"
+                    ><?= Format::hsc($article->getHeader()) ?></a>&raquo;
+                <?php else: ?>
+                    Добавление статьи
+                <?php endif; ?>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td class="compulsory">Статья активна:</td>
+            <td>
+                <?php
+                $select = $this->getHelper(Form::class)->inputSelect(
+                    'article[active]',
+                    $article->getActive(),
+                );
+                $select->addOption(
+                    $this->getHelper(Form::class)->inputOption(
+                        1, $this->getLang()->get('content.yes')
+                    )
+                );
+                $select->addOption(
+                    $this->getHelper(Form::class)->inputOption(
+                        0, $this->getLang()->get('content.no')
+                    )
+                );
+                echo $select->getHtml();
+                ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('active')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">HTML-формат:</td>
+            <td>
+                <?php
+                $select = $this->getHelper(Form::class)->inputSelect(
+                    'article[is_html]',
+                    $article->getIsHtml(),
+                );
+                $select->addOption(
+                    $this->getHelper(Form::class)->inputOption(
+                        0, $this->getLang()->get('content.no')
+                    )
+                );
+                $select->addOption(
+                    $this->getHelper(Form::class)->inputOption(
+                        1, $this->getLang()->get('content.yes')
+                    )
+                );
+                echo $select->getHtml();
+                ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('is_html')
+                ) ?>
+            </td>
+        </tr>
+
+        <tr>
+            <td><?= $this->getLang()->get('content.id') ?>:</td>
+            <td><?= $article->getId() ?></td>
+        </tr>
+        <tr>
+            <td>URL:</td>
+            <td><?= $article->getUrl() ?></td>
+        </tr>
+        <tr>
+            <td>Дата создания:</td>
+            <td><p><?= $article->getCreateDate()->formatAsMysqlDatetime() ?></p></td>
+        </tr>
+        <tr>
+            <td>Дата редактирования:</td>
+            <td>
+                <?php if ($article->getEditDate()): ?>
+                    <p><?= $article->getEditDate()->formatAsMysqlDatetime() ?></p>
+                    <p>будет изменена после редактирования</p>
+                <?php else: ?>
+                    <p>Не редактировалось</p>
+                <?php endif; ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Заголовок статьи:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'article[header]',
+                    $article->getHeader(),
+                    ['maxlength' => 255]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('header')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Текст статьи:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputTextarea(
+                    'article[text]',
+                    $article->getText(),
+                    ['id' => 'article_text']
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('text')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputHidden(
+                    'article[id]',
+                    $article->getId()
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputSubmit(
+                    'save_changes',
+                    $this->getLang()->get('content.save_changes')
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                    'return_on_page',
+                    1, 0,
+                    $return_on_page,
+                    ['id' => 'label_return_on_page']) ?>
+
+                <?= $this->getHelper(Form::class)->label(
+                    $this->getLang()->get('content.return_to_this_page'),
+                    'label_return_on_page'
+                )->getHtml() ?>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</form>
+
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

@@ -1,0 +1,144 @@
+<?php
+
+use Krugozor\Cover\CoverArray;
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Module\Model\Controller;
+use Krugozor\Framework\Module\Module\Model\Module;
+use Krugozor\Framework\Statical\Strings;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+$return_on_page = $this->getRequest()->getRequest('return_on_page', Request::SANITIZE_INT);
+
+/** @var Controller $controllerModel */
+$controllerModel = $this->getStorage()->get('controllerModel');
+
+/** @var CoverArray $modulesModelList */
+$modulesModelList = $this->getStorage()->get('modulesModelList');
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+    ]) ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+
+<form method="post" action="<?= $this->getRequest()->getRequestUri()->getEscapeUriValue() ?>">
+    <table class="edit">
+        <thead>
+        <tr>
+            <th colspan="2">
+                <?php if ($controllerModel->getId()): ?>
+                    <?= Strings::createMessageFromParams(
+                        $this->getLang()->get('content.editing_controller'),
+                        ['controller_name' => $controllerModel->getName()]
+                    ) ?>
+                <?php else: ?>
+                    Добавление контроллера
+                <?php endif; ?>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td class="compulsory">Модуль:</td>
+            <td><?php
+                $select = $this->getHelper(Form::class)->inputSelect(
+                    'controller[id_module]',
+                    $controllerModel->getIdModule()
+                );
+
+                $select->addOption($this->getHelper(Form::class)->inputOption(
+                    0, $this->getLang()->get('content.select_value')
+                ));
+
+                /** @var Module $moduleModel */
+                foreach ($modulesModelList as $moduleModel):
+                    $select->addOption(
+                        $this->getHelper(Form::class)->inputOption(
+                            $moduleModel->getId(),
+                            $moduleModel->getName()
+                        )
+                    );
+                endforeach;
+                echo $select->getHtml();
+                ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('id_module')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Имя контроллера:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'controller[name]',
+                    $controllerModel->getName(),
+                    ['maxlength' => 255]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('name')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Ключ контроллера:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'controller[key]',
+                    $controllerModel->getKey(),
+                    ['maxlength' => 30]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('key')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputHidden(
+                    'controller[id]',
+                    $controllerModel->getId()
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputSubmit(
+                    'submit',
+                    $this->getLang()->get('content.save_changes')
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                    'return_on_page', 1, 0,
+                    $return_on_page,
+                    ['id' => 'label_return_on_page']
+                ) ?>
+
+                <?= $this->getHelper(Form::class)->label(
+                    $this->getLang()->get('content.return_to_this_page'),
+                    'label_return_on_page'
+                )->getHtml() ?>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</form>
+
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

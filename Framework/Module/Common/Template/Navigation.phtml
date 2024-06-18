@@ -1,0 +1,15 @@
+<?php
+
+/** @var Manager $pagination */
+
+use Krugozor\Framework\Pagination\Manager;
+
+?>
+<?php if ($pagination): ?>
+    <div class="navigation_list">
+        <p><!--noindex-->Всего элементов: <!--/noindex--><strong><?= $pagination->getCount() ?></strong></p>
+        <?php if ($pagination->getCount()): ?>
+            <?= $pagination->getHelper()->getHtml() ?>
+        <?php endif; ?>
+    </div>
+<?php endif; ?>

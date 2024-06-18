@@ -1,0 +1,9 @@
+fieldset {
+    width: fit-content;
+}
+fieldset > div {
+    line-height: 20px;
+}
+fieldset > div > label {
+    cursor: pointer;
+}

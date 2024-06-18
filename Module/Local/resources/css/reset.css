@@ -1,0 +1,57 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+
+body {
+    line-height: 1.25;
+}
+
+address, article, aside, blockquote, details, dialog, dd, div, dl, dt, fieldset,
+figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hgroup, hr, main,
+nav, ol, p, pre, section, ul, menu {
+    display: block;
+}
+
+menu, ol, ul {
+    list-style: none;
+}
+
+li {
+    display: list-item;
+}
+
+blockquote, q {
+    quotes: "«" "»" "„" "“";
+}
+
+blockquote::before {
+    content: open-quote;
+}
+
+blockquote::after {
+    content: close-quote;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+    table-layout: auto;
+}
+
+thead, tbody, tfoot {
+    vertical-align: middle;
+}
+
+td, th, tr {
+    vertical-align: inherit;
+}

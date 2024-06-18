@@ -1,0 +1,162 @@
+<?php
+
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Module\Model\Controller;
+use Krugozor\Framework\Module\Module\Model\Module;
+use Krugozor\Framework\Statical\Strings;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+$return_on_page = $this->getRequest()->getRequest('return_on_page', Request::SANITIZE_INT);
+
+/** @var Module $moduleModel */
+$moduleModel = $this->getStorage()->get('moduleModel');
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+        'module' => ['edit-module.css']
+    ]) ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+<?php if ($moduleModel->getId()): ?>
+    <menu class="main">
+        <li>
+            <a href="/module/edit-controller/?id_module=<?= $moduleModel->getId() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>">
+                Добавление контроллера
+            </a>
+        </li>
+    </menu>
+<?php endif; ?>
+
+<form method="post" action="<?= $this->getRequest()->getRequestUri()->getEscapeUriValue() ?>">
+    <table class="edit">
+        <thead>
+        <tr>
+            <th colspan="2">
+                <?php if ($moduleModel->getId()): ?>
+                    <?= Strings::createMessageFromParams(
+                        $this->getLang()->get('content.editing_module'),
+                        ['module_name' => $moduleModel->getName()]
+                    ) ?>
+                <?php else: ?>
+                    Добавление модуля
+                <?php endif; ?>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td class="compulsory">Имя модуля:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'module[name]',
+                    $moduleModel->getName(),
+                    ['maxlength' => 50]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('name')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Ключ модуля:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'module[key]',
+                    $moduleModel->getKey(),
+                    ['maxlength' => 30]
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->getFieldError(
+                    $this->getErrors()->get('key')
+                ) ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Контроллеры:</td>
+            <td>
+                <?php if ($moduleModel->getControllersList()->count()): ?>
+                    <table>
+                        <tbody>
+                        <?php
+                        /** @var Controller $controller */
+                        foreach ($moduleModel->getControllersList() as $controller):
+                            ?>
+                            <tr>
+                                <td><?= $controller->getId() ?></td>
+                                <td><?= Format::hsc($controller->getKey()) ?></td>
+                                <td><?= Format::hsc($controller->getName()) ?></td>
+                                <td>
+                                    <a href="/module/edit-controller/?id=<?= $controller->getId() ?>&amp;id_module=<?= $controller->getIdModule() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>">
+                                        <img src="/img/local/system/icon/edit.png" alt="">
+                                    </a>
+                                </td>
+                                <td>
+                                    <?php
+                                    $str = Format::js(
+                                        $this->getLang()->get('content.question_delete_controller'),
+                                        ['controller_name' => $controller->getName(), 'controller_id' => $controller->getId()]
+                                    );
+                                    ?>
+                                    <a onclick='return confirm(<?= $str ?>)'
+                                       href="/module/delete-controller/?id=<?= $controller->getId() ?>&amp;id_module=<?= $controller->getIdModule() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>">
+                                        <img src="/img/local/system/icon/delete.png" alt="">
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <p>Контроллеров нет</p>
+                <?php endif; ?>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputHidden(
+                    'module[id]',
+                    $moduleModel->getId()
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputSubmit(
+                    'submit',
+                    $this->getLang()->get('content.save_changes')
+                )->getHtml() ?>
+
+                <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                    'return_on_page', 1, 0,
+                    $return_on_page,
+                    ['id' => 'label_return_on_page']
+                ) ?>
+
+                <?= $this->getHelper(Form::class)->label(
+                    $this->getLang()->get('content.return_to_this_page'),
+                    'label_return_on_page'
+                )->getHtml() ?>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</form>
+
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

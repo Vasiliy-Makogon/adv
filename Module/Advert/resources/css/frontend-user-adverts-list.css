@@ -1,0 +1,30 @@
+.subblock.filter .two_column .left_column {
+
+}
+.subblock.filter .two_column .right_column {
+    flex-basis:180px;
+    align-self: flex-start;
+}
+
+/* Меню сортировки для пользователя */
+ul.user_advert_order_menu {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-content: stretch;
+    align-items: stretch;
+    flex-wrap: wrap;
+    list-style-type: none;
+    flex-wrap: wrap;
+}
+ul.user_advert_order_menu li{
+    margin:0 2px;
+    border-radius: var(--border-radius-common);
+}
+ul.user_advert_order_menu li a {
+    padding: 5px;
+    display: inline-block;
+}
+ul.user_advert_order_menu li:hover {
+    background-color: var(--form-bg-color);
+}

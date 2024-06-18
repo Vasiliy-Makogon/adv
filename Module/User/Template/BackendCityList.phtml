@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php
+    /** @var View $this */
+
+    use Krugozor\Framework\Http\Request;
+    use Krugozor\Framework\View;
+
+    include ($this->getRealTemplatePath('Common/MetaTags'))
+    ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+        'user' => ['backend-city-list.css'],
+    ]) ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+
+<table class="datatable">
+    <tr>
+        <td>
+            <?php
+            $select = $this->getHelper('\Krugozor\Framework\Helper\Form')->inputSelect('id_region', $this->getRequest()->getRequest('id_region', Request::SANITIZE_STRING), array('onchange' => 'window.location.href = "?id_region=" + this.value'));
+            $select->addOption($this->getHelper('\Krugozor\Framework\Helper\Form')->inputOption(0, $this->getLang()->get('content.select_value')));
+            foreach ($this->regionList as $region):
+                $select->addOption($this->getHelper('\Krugozor\Framework\Helper\Form')->inputOption($region->getId(), $region->getNameRu()));
+            endforeach;
+            echo $select->getHtml();
+            ?>
+        </td>
+    </tr>
+</table>
+
+<table class="datatable">
+    <?php if ($this->cityList->getList()->count()): ?>
+        <colgroup>
+            <col><col><col><col><col>
+            <col><col><col><col>
+        </colgroup>
+        <tr>
+            <th colspan="9">Список городов</th>
+        </tr>
+        <tr>
+            <th>
+                <?php
+                $linker = $this->getHelper('\Krugozor\Framework\Helper\SortLink')
+                    ->setFieldName('id')
+                    ->setAnchor($this->getLang()->get('content.id'))
+                    ->setUrl($this->getRequest()->getCanonicalRequestUri()->getSimpleUriValue())
+                    ->setIconSrc('/img/local/system/icon/')
+                    ->setCurrentFieldName($this->cityList->getAlias())
+                    ->setCurrentSortOrder($this->cityList->getOrder())
+                    ->setQueryStringFromArray(array(
+                        'sep' => $this->cityList->getPagination()->getCurrentSeparator(),
+                        'page' => $this->cityList->getPagination()->getCurrentPage(),
+                        'id_region' => $this->getRequest()->getRequest('id_region', Request::SANITIZE_INT)
+                    ));
+                echo $linker->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $linker->setFieldName('region')
+                    ->setAnchor('ID Региона')
+                    ->getHtml(); ?>
+            </th>
+            <th>
+                <?php
+                echo $linker->setFieldName('weight')
+                    ->setAnchor('Вес')
+                    ->getHtml(); ?>
+            </th>
+            <th>
+                <?php
+                echo $linker->setFieldName('name_ru')
+                    ->setAnchor('Город RU')
+                    ->getHtml(); ?>
+            </th>
+            <th>
+                <?php
+                echo $linker->setFieldName('name_ru2')
+                    ->setAnchor('Город RU')
+                    ->getHtml(); ?>
+            </th>
+            <th>
+                <?php
+                echo $linker->setFieldName('name_ru3')
+                    ->setAnchor('Город RU')
+                    ->getHtml(); ?>
+            </th>
+            <th>
+                <?php
+                echo $linker->setFieldName('name_en')
+                    ->setAnchor('Город EN')
+                    ->getHtml(); ?>
+            </th>
+            <th colspan="4">
+                <?= $this->getLang()->get('content.actions') ?>
+            </th>
+        </tr>
+
+        <?php foreach ($this->cityList->getList() as $city): ?>
+            <tr>
+                <td id="city_<?= $city->getId() ?>"><?= $city->getId() ?></td>
+                <td>
+                    <a href="/user/backend-region-list/?id=<?= $city->getIdRegion() ?>"><?= $city->getIdRegion() ?></a>
+                </td>
+                <td><?= $city->getWeight() ?></td>
+                <td>
+                    <a href="/user/backend-city-edit/?id=<?= $city->getId() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>"><?= $this->getHelper('\Krugozor\Framework\Helper\Format')->run($city->getNameRu(), 'decode', 'hsc') ?></a>
+                </td>
+                <td><?= $this->getHelper('\Krugozor\Framework\Helper\Format')->run($city->getNameRu2(), 'decode', 'hsc') ?></td>
+                <td><?= $this->getHelper('\Krugozor\Framework\Helper\Format')->run($city->getNameRu3(), 'decode', 'hsc') ?></td>
+                <td><?= $this->getHelper('\Krugozor\Framework\Helper\Format')->run($city->getNameEn(), 'decode', 'hsc') ?></td>
+                <td ><a
+                            href="/user/backend-city-edit/?id=<?= $city->getId() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>"><img
+                                src="/img/local/system/icon/edit.png" alt=""></a></td>
+                <td ><img src="/img/local/system/icon/delete_empty.png" alt=""></td>
+            </tr>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <tr>
+            <th><h4>Список городов</h4></th>
+        </tr>
+        <tr>
+            <td><?= $this->getLang()->get('content.not_found_request_data') ?></td>
+        </tr>
+    <?php endif; ?>
+</table>
+
+<?php
+$pagination = $this->cityList->getPagination();
+$pagination
+    ->getHelper()
+    ->setCssNormalLinkClass('navigation_normal_link')
+    ->setCssActiveLinkClass('navigation_active_link')
+    ->setRequestUriParameter('field_name', $this->cityList->getAlias())
+    ->setRequestUriParameter('sort_order', $this->cityList->getOrder())
+    ->setRequestUriParameter('id_region', $this->getRequest()->getRequest('id_region', Request::SANITIZE_INT));
+?>
+
+<?php include $this->getRealTemplatePath('Common/Navigation') ?>
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

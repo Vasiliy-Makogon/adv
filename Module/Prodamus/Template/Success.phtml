@@ -1,0 +1,37 @@
+<?php
+
+use Krugozor\Framework\View;
+
+/* @var $this View */
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="robots" content="noindex, nofollow">
+    <meta charset="utf-8">
+    <meta name="referrer" content="unsafe-url">
+    <meta name="keywords" content="<?= $this->getLang()->get('meta.keywords') ?>">
+    <meta name="description" content="<?= $this->getLang()->get('meta.description') ?>">
+    <?= $this->getLang()->get('title')->getHtml() ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'structure.css'],
+        'prodamus' => ['success.css'],
+    ]) ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Local/FrontendTop') ?>
+
+<div id="<?= $this->getPageId() ?>" class="content">
+    <?php include $this->getRealTemplatePath('Common/Notification') ?>
+</div>
+
+<?php include $this->getRealTemplatePath('Local/FrontendBottom') ?>
+
+</body>
+</html>

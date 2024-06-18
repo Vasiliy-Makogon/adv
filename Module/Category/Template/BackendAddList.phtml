@@ -1,0 +1,79 @@
+<?php
+
+use Krugozor\Cover\CoverArray;
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Category\Helper\OptionsList;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+/** @var CoverArray $tree */
+$tree = $this->getStorage()->offsetGet('tree');
+
+/** @var int $id */
+$id = $this->getRequest()->getRequest('id', Request::SANITIZE_INT);
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+    ]) ?>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.ajax.js') ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+
+<form method="post" action="<?= $this->getRequest()->getCanonicalRequestUri()->getEscapeUriValue() ?>">
+    <table class="edit">
+        <thead>
+        <tr>
+            <th colspan="2">Добавление списка категорий</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td class="compulsory">Родительский узел:</td>
+            <td>
+                <?php
+                $select = $this->getHelper(Form::class)->inputSelect('id', $id);
+                $select->addOption($this->getHelper(Form::class)->inputOption('0', 'Выберите'));
+                foreach ((new OptionsList($tree))->getOptions() as $option):
+                    $select->addOption($option);
+                endforeach;
+                echo $select->getHtml();
+                ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Список категорий:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputTextarea('list', '')->getHtml() ?>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputSubmit(
+                    'submit',
+                    $this->getLang()->get('content.save_changes')
+                )->getHtml() ?>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</form>
+
+</body>
+</html>

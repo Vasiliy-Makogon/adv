@@ -1,0 +1,38 @@
+<?php
+
+use Krugozor\Framework\View;
+use Krugozor\Framework\Registry;
+
+/* @var View $this */
+
+$thumbnail_id = $this->getStorage()->get('thumbnail_id');
+$path_to_image = $this->getStorage()->get('path_to_image');
+$error = $this->getStorage()->get('error');
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <?= $this->getJs('local', 'library/krugozor.js'); ?>
+    <?= $this->getJs('local', 'library/krugozor.thumbnail.js'); ?>
+</head>
+<body>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        Krugozor.thumbnail.setUploadedImagesBlock(window.parent.document.getElementById('uploaded_images'));
+        Krugozor.thumbnail.setErrorsBlock(window.parent.document.getElementById('thumbnail_errors'));
+        Krugozor.thumbnail.setMainForm(window.parent.document.getElementById('main_form'));
+        Krugozor.thumbnail.setFileUploadForm(window.parent.document.getElementById('file_upload_form'));
+        Krugozor.thumbnail.setMaxFiles(<?= Registry::getInstance()->get('UPLOAD.MAX_FILES_COUNT') ?>);
+
+        <?php if ($error): ?>
+        Krugozor.thumbnail.uploadFail('<?=addslashes($error)?>');
+        <?php elseif ($path_to_image): ?>
+        Krugozor.thumbnail.uploadSuccess(<?=$thumbnail_id?>, '<?=$path_to_image?>');
+        <?php endif; ?>
+
+    });
+</script>
+</body>
+</html>

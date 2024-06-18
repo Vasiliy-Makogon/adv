@@ -1,0 +1,204 @@
+<?php
+
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Helper\SortLink;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Article\Model\Article;
+use Krugozor\Framework\Module\Article\Service\BackendArticlesListService;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+$searchKeyword = $this->getRequest()->getRequest('keyword', Request::SANITIZE_STRING_FULLTEXT);
+
+/** @var BackendArticlesListService $articlesListService */
+$articlesListService = $this->getStorage()->get('articlesListService');
+
+$articlesListService
+    ->getPagination()
+    ->getHelper()
+    ->setCssNormalLinkClass('navigation_normal_link')
+    ->setCssActiveLinkClass('navigation_open_link')
+    ->setRequestUriParameter('field_name', $articlesListService->getAlias())
+    ->setRequestUriParameter('sort_order', $articlesListService->getOrder());
+$pagination = $articlesListService->getPagination();
+
+$sortLink = new SortLink();
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+        'article' => ['backend-main.css'],
+    ]) ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+<menu class="main">
+    <li><a href="/article/backend-edit/">Добавление статьи</a></li>
+</menu>
+
+<?php include $this->getRealTemplatePath('Common/Navigation') ?>
+
+<form action="/article/backend-set-actions/" method="post">
+    <table class="datatable">
+        <thead>
+        <tr>
+            <th colspan="8">Список статей</th>
+        </tr>
+        <tr>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('id')
+                    ->setAnchor($this->getLang()->get('content.id'))
+                    ->setUrl($this->getRequest()->getCanonicalRequestUri()->getEscapeUriValue())
+                    ->setIconSrc('/img/local/system/icon/')
+                    ->setCurrentFieldName($articlesListService->getAlias())
+                    ->setCurrentSortOrder($articlesListService->getOrder())
+                    ->setQueryStringFromArray([
+                        'sep' => $articlesListService->getPagination()->getCurrentSeparator(),
+                        'page' => $articlesListService->getPagination()->getCurrentPage(),
+                    ])
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('active')
+                    ->setAnchor('Активность')
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('is_html')
+                    ->setAnchor('HTML')
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('article_create_date')
+                    ->setAnchor('Дата создания')
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('article_edit_date')
+                    ->setAnchor('Дата редактирования')
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('header')
+                    ->setAnchor('Заголовок статьи')
+                    ->getHtml();
+                ?>
+            </th>
+            <th colspan="2"><?= $this->getLang()->get('content.actions') ?></th>
+        </tr>
+        </thead>
+        <tbody>
+        <?php if ($articlesListService->getList()->count()): ?>
+
+            <?php
+            /** @var Article $article */
+            foreach ($articlesListService->getList()->getDataAsArray() as ['article' => $article]
+            ): ?>
+                <tr>
+                    <td>
+                        <?= $article->getId() ?>
+                    </td>
+                    <td>
+                        <span>
+                            <?php if ($article->getActive()): ?>
+                                <?= $this->getLang()->get('content.yes') ?>
+                            <?php else: ?>
+                                <?= $this->getLang()->get('content.no') ?>
+                            <?php endif; ?>
+                        </span>
+                    </td>
+                    <td>
+                        <span>
+                            <?php if ($article->getIsHtml()): ?>
+                                <?= $this->getLang()->get('content.yes') ?>
+                            <?php else: ?>
+                                <?= $this->getLang()->get('content.no') ?>
+                            <?php endif; ?>
+                        </span>
+                    </td>
+                    <td>
+                        <?= $article->getCreateDate()->formatDateForPeople() ?>
+                    </td>
+                    <td>
+                        <?php if ($article->getEditDate()): ?>
+                            <?= $article->getEditDate()->formatDateForPeople() ?>
+                        <?php else: ?>
+                            Не редактировалось
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <p>
+                            <b>
+                                <a target="_blank" href="<?= $article->getUrl(true) ?>">
+                                    <?= Format::hsc($article->getHeader()) ?>
+                                </a>
+                            </b>
+                        </p>
+                        <?php if ($article->getScore()): ?>
+                            Релевантность совпадения по поисковому запросу
+                            &laquo;<?= Format::outPut($searchKeyword) ?>&raquo;: <?= $article->getScore() ?>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <a href="/article/backend-edit/?id=<?= $article->getId() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>">
+                            <img src="/img/local/system/icon/edit.png" alt="">
+                        </a>
+                    </td>
+                    <td>
+                        <?php
+                        $str = Format::js(
+                            $this->getLang()->get('content.question_delete_article'),
+                            ['article_header' => $article->getHeader()]
+                        );
+                        ?>
+                        <a onclick='return confirm(<?= $str ?>)'
+                           href="/article/backend-delete/?id=<?= $article->getId() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>">
+                            <img src="/img/local/system/icon/delete.png" alt="">
+                        </a>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+
+        <?php else: ?>
+            <tr>
+                <td colspan="6">
+                    <?= $this->getLang()->get('content.not_found_request_data') ?>
+                </td>
+            </tr>
+        <?php endif; ?>
+        </tbody>
+    </table>
+</form>
+
+<?php include $this->getRealTemplatePath('Common/Navigation') ?>
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

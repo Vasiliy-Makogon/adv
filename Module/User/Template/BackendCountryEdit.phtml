@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php
+    /** @var View $this */
+
+    use Krugozor\Framework\Http\Request;
+    use Krugozor\Framework\View;
+
+    include ($this->getRealTemplatePath('Common/MetaTags'))
+    ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+    ]) ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+
+<form method="post" action="<?= $this->getRequest()->getRequestUri()->getEscapeUriValue() ?>">
+    <table class="edit">
+        <colgroup>
+            <col>
+            <col>
+        </colgroup>
+        <tr>
+            <th colspan="2">
+                <?php if ($this->country->getId()): ?>
+                    Редактирование страны &laquo;<?= $this->getHelper('\Krugozor\Framework\Helper\Format')->hsc($this->country->getNameRu()) ?>&raquo;
+                <?php else: ?>
+                    Добавление страны
+                <?php endif; ?>
+            </th>
+        </tr>
+        <tr>
+            <td class="compulsory">Страна активна:</td>
+            <td>
+                <?php
+                $select = $this->getHelper('\Krugozor\Framework\Helper\Form')->inputSelect('country[active]', $this->country->getActive());
+                $select->addOption($this->getHelper('\Krugozor\Framework\Helper\Form')->inputOption(1, $this->getLang()->get('content.yes')));
+                $select->addOption($this->getHelper('\Krugozor\Framework\Helper\Form')->inputOption(0, $this->getLang()->get('content.no')));
+                echo $select->getHtml();
+                ?>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->getFieldError($this->getErrors()->get('active')) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Вес:</td>
+            <td>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->inputText('country[weight]', $this->country->getWeight(), array('maxlength' => 10))->getHtml() ?>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->getFieldError($this->getErrors()->get('weight')) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Страна по умолчанию:</td>
+            <td>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->inputFullCheckbox('country[is_default_country]', 1, 0, $this->country->getIsDefaultCountry()) ?>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->getFieldError($this->getErrors()->get('is_default_country')) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Имя страны RUS (в именительном падеже):</td>
+            <td>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->inputText('country[name_ru]', $this->country->getNameRu(), array('maxlength' => 50))->getHtml() ?>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->getFieldError($this->getErrors()->get('name_ru')) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Имя страны RUS (в предложном падеже):</td>
+            <td>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->inputText('country[name_ru2]', $this->country->getNameRu2(), array('maxlength' => 50))->getHtml() ?>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->getFieldError($this->getErrors()->get('name_ru2')) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Имя страны RUS (в родительном падеже):</td>
+            <td>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->inputText('country[name_ru3]', $this->country->getNameRu3(), array('maxlength' => 50))->getHtml() ?>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->getFieldError($this->getErrors()->get('name_ru3')) ?>
+            </td>
+        </tr>
+        <tr>
+            <td class="compulsory">Имя страны ENG:</td>
+            <td>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->inputText('country[name_en]', $this->country->getNameEn(), array('maxlength' => 50))->getHtml() ?>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->getFieldError($this->getErrors()->get('name_en')) ?>
+            </td>
+        </tr>
+        <tr >
+            <td colspan="2">
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->inputHidden('country[id]', $this->country->getId())->getHtml() ?>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->inputSubmit('submit', $this->getLang()->get('content.save_changes'))->getHtml() ?>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->inputFullCheckbox('return_on_page', 1, 0, $this->getRequest()->getRequest('return_on_page', Request::SANITIZE_INT), array('id' => 'label_return_on_page')) ?>
+                <?= $this->getHelper('\Krugozor\Framework\Helper\Form')->label($this->getLang()->get('content.return_to_this_page'), 'label_return_on_page')->getHtml() ?>
+            </td>
+        </tr>
+    </table>
+</form>
+
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

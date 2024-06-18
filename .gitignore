@@ -1,0 +1,12 @@
+/logs/*
+/.idea
+/sitemap*.xml
+/composer.phar
+/vendor
+/test.php
+/configuration/config.ini
+composer.lock
+SQL/dump.sql
+/phpinfo.php
+/yandex_*.html
+/console

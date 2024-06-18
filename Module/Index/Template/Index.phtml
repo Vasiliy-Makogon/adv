@@ -1,0 +1,166 @@
+<?php
+
+use Krugozor\Framework\Module\Advert\Service\FrontendAdvertsIndexListService;
+use Krugozor\Framework\Module\Category\Helper\Subcategories;
+use Krugozor\Framework\Module\User\Cover\TerritoryList;
+use Krugozor\Framework\Registry;
+use Krugozor\Framework\View;
+use Krugozor\Cover\CoverArray;
+
+/** @var View $this */
+
+/** @var FrontendAdvertsIndexListService $advertsListService */
+$advertsListService = $this->getStorage()->get('advertsListService');
+$advertsList = $advertsListService->getList();
+
+/** @var TerritoryList $territoryList */
+$territoryList = $this->getStorage()->get('territoryList');
+
+/** @var CoverArray $categories */
+$categories = $this->getStorage()->get('categories');
+
+/** @var CoverArray $specialAdvertsList */
+$specialAdvertsList = $this->getStorage()->get('specialAdvertsList');
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Local/MetaTags')); ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'structure.css', 'categories.css'],
+        'advert' => ['_adverts-list.css'],
+    ]) ?>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.ajax.js') ?>
+    <?= $this->getJs('advert', '_adverts-list.js') ?>
+
+    <script type="application/ld+json">
+        <?php
+            $webSite = [
+                "@context" => "https://schema.org",
+                "@type" => "WebSite",
+                "name" => Registry::getInstance()->get('HOSTINFO.SITE_NAME'),
+                "url" => Registry::getInstance()->get('HOSTINFO.HOST'),
+                "inLanguage" => "ru-RU",
+                "alternateName" => [
+                    Registry::getInstance()->get('HOSTINFO.DOMAIN_AS_TEXT'),
+                    Registry::getInstance()->get('HOSTINFO.HOST_AS_TEXT')
+                ]
+            ];
+            echo json_encode($webSite);
+        ?>
+    </script>
+</head>
+<body itemscope itemtype="https://schema.org/WebPage">
+
+<?php include $this->getRealTemplatePath('Local/FrontendTop') ?>
+
+<div id="<?= $this->getPageId() ?>" class="content">
+
+    <?php include $this->getRealTemplatePath('Common/Notification') ?>
+
+    <div class="two_column two_column_wrap">
+
+        <?php if (0): ?>
+            <div class="left_column">
+                <div class="left_column_content">
+                    <div class="bheader add_header_icon add_star_icon">Специальные предложения</div>
+                    <ul class="advert_list advert_list_special">
+                        <?php
+                        $view = new View($this->getRealTemplatePath('Advert/AdvertsList'));
+                        $view->getStorage()->offsetSet('advertsList', $specialAdvertsList);
+                        $view->setCurrentUser($this->getCurrentUser());
+                        $view->run();
+                        echo $view->getOutput();
+                        ?>
+                    </ul>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <div class="left_column">
+            <div class="left_column_content">
+                <!-- /Левый столбец -->
+                <header><h1>Последние добавленные на сайт объявления</h1></header>
+                <ul class="advert_list advert_list_shop_33 advert_list_shop_25">
+                    <?php
+                    $view = new View($this->getRealTemplatePath('Advert/AdvertsList'));
+                    $view->getStorage()->offsetSet('advertsList', $advertsList);
+                    $view->setCurrentUser($this->getCurrentUser());
+                    $view->getStorage()->offsetSet('isIndexController', true);
+                    $view->run();
+                    echo $view->getOutput();
+                    ?>
+                </ul>
+                <!-- /Левый столбец -->
+            </div>
+        </div>
+
+        <div class="right_column">
+            <div class="right_column_content">
+                <!-- Правый столбец -->
+
+                <?php if ($categories->count()): ?>
+                    <nav class="subblock categories_list single">
+                        <?= (new Subcategories($categories))
+                            ->setCurrentTerritory($territoryList->getLastTerritory())
+                            ->getHtml()
+                        ?>
+                    </nav>
+                <?php endif; ?>
+
+                <!-- Yandex.RTB R-A-6810960-1 -->
+                <div class="subblock" id="yandex_rtb_R-A-6810960-1"></div>
+                <script>
+                    window.yaContextCb.push(()=>{
+                        Ya.Context.AdvManager.render({
+                            "blockId": "R-A-6810960-1",
+                            "renderTo": "yandex_rtb_R-A-6810960-1"
+                        })
+                    })
+                </script>
+
+                <div class="subblock annotation">
+                    <p><?= Registry::getInstance()->get('HOSTINFO.DOMAIN_AS_TEXT') ?> &mdash; доска бесплатных объявлений,
+                        дающая возможность пользователю бесплатно и без
+                        ограничений <a href="/advert/frontend-edit-advert/">размещать объявления</a> о
+                        продаже или покупке любых товаров или услуг. Основная цель сайта &mdash; обеспечить удобство и
+                        доступность информации, поэтому сайт не требует обязательной регистрации, что делает процесс
+                        размещения объявлений простым и быстрым.</p>
+
+                    <p><?= Registry::getInstance()->get('HOSTINFO.DOMAIN_AS_TEXT') ?> имеет в своей основе
+                        тысячи тематических категорий, охватывающих все основные направления жизнедеятельности и
+                        бизнеса:
+                        от недвижимости и автомобилей до мебели и домашних животных. Кроме того,
+                        на сайте доступны объявления от
+                        крупного и среднего бизнеса, что делает его полезным инструментом для построения успешных
+                        бизнес-процессов между субъектами.</p>
+
+                    <p>Для малого бизнеса, индивидуальных предпринимателей и самозанятых
+                        на <?= Registry::getInstance()->get('HOSTINFO.DOMAIN_AS_TEXT') ?>
+                        бесплатно предоставляется услуга
+                        &laquo;<a href="/help/b2b">Публичные профили</a>&raquo;. Данное бизнес-решение позволяет
+                        предпринимателям создать своё виртуальное представительство в сети
+                        Интернет, где можно разместить каталог своих товаров или услуг.
+                        В отличие от содержания своего собственного
+                        сайта, публичные профили на <?= Registry::getInstance()->get('HOSTINFO.DOMAIN_AS_TEXT') ?> не требуют
+                        финансовых и временных затрат, но позволяют продукции и услугам бизнеса
+                        всегда находиться в поле видимости потенциальных клиентов.</p>
+                </div>
+                <!-- /Правый столбец -->
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<?php include $this->getRealTemplatePath('Local/FrontendBottom') ?>
+<?php include $this->getRealTemplatePath('Prodamus/Popup') ?>
+
+</body>
+</html>

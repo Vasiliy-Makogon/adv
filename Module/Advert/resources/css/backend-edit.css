@@ -1,0 +1,44 @@
+#js-select-category-wrapper select {
+    display: block;
+}
+#js-select-category-wrapper select:where(:not(:last-child)) {
+    margin-bottom:5px;
+}
+
+iframe {
+    display:none;
+}
+
+/* блок с изображениями изначально скрыт - display=block ставится в JS */
+div#uploaded_images {
+    overflow:hidden;
+    display:none;
+}
+/* или на уровне формирования шаблона, проставляя класс display - если есть изображения у сущьности  */
+div#uploaded_images.display {
+    display:block;
+}
+div#uploaded_images span{
+    margin:10px;
+    display:inline-block;
+    position:relative;
+}
+div#uploaded_images span img{
+    border:1px solid #CCC;
+    display:block;
+    width:130px;
+    height:86px;
+}
+div#uploaded_images span a {
+    /* https://www.svgrepo.com/svg/449937/times-square */
+    background:url(/svg/local/icon-16-delete-square.svg) center center scroll no-repeat #fff;
+    width:18px;
+    height:18px;
+    display:block;
+    position:absolute;
+    bottom:5px;
+    left:5px;
+}
+div#uploaded_images span a:hover {
+    box-shadow: 0 0 15px #fff;
+}

@@ -1,0 +1,184 @@
+.content > div.two_column > .left_column {
+    flex-basis: 30%;
+}
+@media screen and (max-width: 780px) {
+    .content > div.two_column > .left_column {
+        display: none;
+    }
+}
+.content > div.two_column > .left_column .left_column_content {
+    padding:0 10px 0 0;
+}
+.content > div.two_column > .left_column .left_column_content > aside {
+    border:1px solid #CCC;
+    margin:0 0 10px 0;
+    color:#333;
+    border-radius: var(--border-radius-common);
+}
+.content > div.two_column > .left_column .left_column_content > aside div.rules_text{
+    padding:5px;
+}
+.content > div.two_column > .left_column .left_column_content > aside div.rules_text p:last-child{
+    margin:10px 0 0 0;
+    font-weight: bold;
+    text-align: center;
+}
+.content > div.two_column > .left_column .left_column_content > aside div.rules_text ul{
+}
+.content > div.two_column > .left_column .left_column_content > aside div.rules_text ul li{
+    margin:5px 0 5px 15px;
+    list-style-type: disc;
+}
+.content > div.two_column > .right_column {
+    flex-basis: 70%;
+}
+.content > div.two_column > .right_column .right_column_content {
+
+}
+.content > div.two_column > .right_column .right_column_content fieldset:first-child{
+    margin:0;
+}
+
+
+/* Стили для полей */
+#js-select-category-wrapper select {
+    width:100%;
+}
+#js-select-category-wrapper select:where(:not(:last-child)) {
+    margin-bottom:5px;
+}
+input.inegers {
+    width:100px !important;
+    margin-right: 10px;
+    text-align: center;
+}
+select.price_type {
+    width:150px;
+}
+input.advert_header {
+    width:100%;
+}
+@media screen and (max-width: 780px) {
+    select.price_type {
+        width: auto;
+    }
+}
+
+
+/* Для блока цены меняем положение подсказки */
+div.fields_wrap div.animate_field_description {
+    top: 10px;
+}
+/* Для всплывающей подсказки около чекбокса "даром" меняем позицию сноски */
+div.animate_field_description_free div.triangle-right {
+	top:37px;
+}
+div.animate_field_description_free div.triangle-right-border {
+	top:36px;
+}
+
+
+/* Блоки использовать мои контактные данные */
+.use_my_main_contact {
+    display: inline;
+    background-color: var(--blocks-bg-color);
+    padding:5px;
+    font-weight: bold;
+}
+/* Блоки использовать мои контактные данные - сами контакты */
+.use_my_main_contact.use_contact {
+    display: block;
+    width: 80%;
+}
+
+
+/* Быстрый выбор страны */
+div.simple_city_checked {
+    color:#666;
+    padding:10px 0 0 10px;
+}
+div.simple_city_checked p{
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+div.simple_city_checked dl dt {
+    font-weight:bold;
+    padding:0 0 0 20px;
+}
+div.simple_city_checked dl dt#ru_icon {
+    background: url(/svg/local/flag_ru.svg) top left no-repeat;
+}
+div.simple_city_checked dl dt#by_icon {
+    background: url(/svg/local/flag_by.svg) top left no-repeat;
+}
+div.simple_city_checked dl dt#nr_icon {
+    background:url(/svg/local/flag_dnr.svg) top left no-repeat;
+}
+div.simple_city_checked dl dd {
+    padding:5px 0 10px 20px;
+}
+div.simple_city_checked a {
+    color:#333;
+    text-decoration:underline;
+}
+
+
+iframe {
+    display:none;
+}
+
+/* Описание перед загрузкой фото */
+div.photo_rules {
+	margin: 0 0 15px 0;
+}
+div.photo_rules ul li{
+    margin:0 0 0 30px;
+    list-style-type: disc;
+}
+
+/* блок с изображениями изначально скрыт - display=block ставится в JS */
+div#uploaded_images {
+    margin:15px auto;
+    overflow:hidden;
+    display:none;
+    text-align: center;
+}
+/* или на уровне формирования шаблона, проставляя класс display - если есть изображения у сущьности  */
+div#uploaded_images.display {
+	display:block;
+}
+div#uploaded_images span{
+    margin:3px 3px 0 0;
+    display:inline-block;
+    position:relative;
+}
+div#uploaded_images span img{
+    border:1px solid #CCC;
+    display:block;
+    width:130px;
+    height:86px;
+}
+div#uploaded_images span a {
+    /* https://www.svgrepo.com/svg/449937/times-square */
+    background:url(/svg/local/icon-16-delete-square.svg) center center scroll no-repeat #fff;
+    width:18px;
+    height:18px;
+    display:block;
+    position:absolute;
+    bottom:5px;
+    left:5px;
+}
+div#uploaded_images span a:hover {
+    box-shadow: 0 0 15px #fff;
+}
+
+
+textarea {
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.radiobuttons_classic .select_category_notification {
+    color:#666;
+}

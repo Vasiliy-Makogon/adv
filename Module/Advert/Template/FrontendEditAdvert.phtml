@@ -1,0 +1,1113 @@
+<?php
+
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Html\ElementSelect;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Advert\Model\Advert;
+use Krugozor\Framework\Module\Advert\Model\Thumbnail;
+use Krugozor\Framework\Module\Advert\Type\PriceType;
+use Krugozor\Framework\Module\Category\Model\Category;
+use Krugozor\Framework\Registry;
+use Krugozor\Framework\Statical\Strings;
+use Krugozor\Framework\Validator\StringLengthValidator;
+use Krugozor\Framework\Validator\TelegramValidator;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+/** @var Advert $advert */
+$advert = $this->getStorage()->get('advert');
+
+/** @var Category $category */
+$category = $this->getStorage()->get('category');
+
+/** @var string $captcha_code */
+$captcha_code = $this->getStorage()->get('captcha_code');
+
+/** @var string $session_name */
+$session_name = $this->getStorage()->get('session_name');
+
+/** @var string $session_id */
+$session_id = $this->getStorage()->get('session_id');
+
+/** @var string $from_registration */
+$from_registration = $this->getRequest()->getRequest('from_registration', Request::SANITIZE_INT);
+
+if ($this->getCurrentUser()->isGuest()):
+    $this->getLang()->get('title')->append('Подать объявление бесплатно и без регистрации');
+elseif ($from_registration):
+    $this->getLang()->get('title')->append('Шаг 2. Размещение объявления');
+else:
+    $this->getLang()->get('title')->append('Мой личный кабинет');
+
+    if ($advert->getId()):
+        $this->getLang()->get('title')->append('Мои объявления');
+        $this->getLang()->get('title')->append('Редактирование объявления № ' . $advert->getId());
+    else:
+        $this->getLang()->get('title')->append('Создать новое объявление');
+    endif;
+endif;
+
+/** @var int $terms_of_service */
+$terms_of_service = $this->getRequest()->getRequest('terms_of_service', Request::SANITIZE_INT);
+
+/** @var int $terms_of_service */
+$terms_of_privacy = $this->getRequest()->getRequest('terms_of_privacy', Request::SANITIZE_INT);
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Local/MetaTags')); ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'structure.css'],
+        'advert' => ['frontend-edit-advert.css'],
+    ]) ?>
+
+    <script>
+        const is_guest = <?= (int) $this->getCurrentUser()->isGuest() ?>;
+        const category_pid = <?= (int) $category->getPid() ?>;
+        const current_category = <?= (int) $category->getId() ?>;
+        const max_upload_files = <?= Registry::getInstance()->get('UPLOAD.MAX_FILES_COUNT') ?>;
+        const current_advert_type = '<?= $advert->getType()->getValue() ?>';
+    </script>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.ajax.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.locations.js'); ?>
+    <?= $this->getJs('local', 'library/krugozor.category-select-list-builder.js'); ?>
+    <?= $this->getJs('local', 'library/krugozor.thumbnail.js'); ?>
+    <?= $this->getJs('local', 'phoneinput.js') ?>
+    <?= $this->getJs() ?>
+
+</head>
+<body itemscope itemtype="https://schema.org/WebPage">
+
+<?php include $this->getRealTemplatePath('Local/FrontendTop') ?>
+
+<div id="<?= $this->getPageId() ?>" class="content">
+
+    <?php include $this->getRealTemplatePath('Common/Notification') ?>
+
+    <header>
+        <h1>
+            <?php if ($this->getCurrentUser()->isGuest() || $from_registration): ?>
+                <?= $this->getLang()->get('title')->item(0) ?>
+            <?php else: ?>
+                <a class="space_nowrap"
+                   href="/authorization/frontend-login/"><?= $this->getLang()->get('title')->item(0) ?></a> /
+                <?php if ($advert->getId()): ?>
+                    <a class="space_nowrap"
+                       href="/advert/frontend-user-adverts-list/"><?= $this->getLang()->get('title')->item(1) ?></a> / <?= $this->getLang()->get('title')->item(2) ?>
+                <?php else: ?>
+                    <?= $this->getLang()->get('title')->item(1) ?>
+                <?php endif; ?>
+            <?php endif; ?>
+        </h1>
+    </header>
+
+    <div class="two_column">
+        <div class="left_column">
+            <div class="left_column_content">
+                <!-- left -->
+                <aside class="rules">
+                    <div class="rules_text">
+                        <div class="bheader">Запрещается публикация объявлений следующего характера и содержания:</div>
+                        <!--noindex-->
+                        <ul>
+                            <li>Материалы, нарушающие Уголовный Кодекс Российской Федерации и материалы, ведущие к
+                                гражданско-правовым правонарушениям.
+                            </li>
+                            <li>
+                                <strong>Алкоголь, наркотики, табак, курительные смеси</strong>
+                                <ul>
+                                    <li>Табак и классические сигареты.</li>
+                                    <li>Курительные смеси, различные &laquo;электронные сигареты&raquo;, кальяны, а
+                                        также комплектующие к ним.
+                                    </li>
+                                    <li>Любая алкогольная продукция, в т.ч. этиловый спирт.</li>
+                                    <li>Любые наркотические и психотропные вещества.</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Медицина и здоровье:</strong>
+                                <ul>
+                                    <li>Любые медицинские услуги от физических лиц, в т.ч. медицинский массаж
+                                        (допускается
+                                        только косметический).
+                                    </li>
+                                    <li>Лекарственные средства и биологически активные добавки (БАДы).</li>
+                                    <li>Медицинские изделия и оборудование от физических лиц.</li>
+                                    <li>Лекарственное сырье от физических лиц.</li>
+                                    <li>Услуги и средства т.н. &laquo;народной медицины&raquo;.</li>
+                                    <li>Человеческие органы и ткани, донорские услуги, а также услуги суррогатных
+                                        матерей.
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Животные и растения</strong>
+                                <ul>
+                                    <li>Животные и растения, занесённые в красные книги РФ или охраняемые международными
+                                        договорами.
+                                    </li>
+                                    <li>Чучела, шкуры, кости и т.п. Любые товары и изделия из них.</li>
+                                    <li>Товары для браконьерства (электроудочки, капканы, сети, ловушки).</li>
+                                    <li>Зоопарки, услуги, связанные с использованием животных
+                                        (фотосъемка с животными, контактные зоопарки, шоу с использованием животных).
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Финансовые услуги и материальные ценности</strong>
+                                <ul>
+                                    <li>Займы, кредиты, финансовое посредничество, коллекторские услуги.</li>
+                                    <li>Финансовые пирамиды, средства быстрого заработка, азартные игры, лотереи,
+                                        казино, а также оборудование для них.
+                                    </li>
+                                    <li>Криптовалюты и оборудование для них.</li>
+                                    <li>Драгоценные металлы и камни (за исключением ювелирных украшений).</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Прочее</strong>
+                                <ul>
+                                    <li>Реклама интернет-магазинов как самоцели объявления, т.е. если в объявлении
+                                        представлена информация не о конкретном товаре интернет-магазина, а об
+                                        интернет-магазине в целом.
+                                    </li>
+                                    <li>Благотворительные фонды, НКО, общины, секты, религиозные организации.</li>
+                                    <li>Оккультные услуги, магия, гадание и т.п.</li>
+                                    <li>Реклама веб-сайтов и порталов.</li>
+                                    <li>Контрафактные товары и пиратская продукция. Реплики и подделки брендовых
+                                        товаров.
+                                    </li>
+                                    <li>Услуги по написанию (в т.ч. помощи в написании) курсовых и дипломных работ, а
+                                        также их продажа.
+                                    </li>
+                                    <li>Услуги интимного характера и содействие в подобного рода услугах (сводничество).
+                                        Эротические или порнографические товары и изделия.
+                                    </li>
+                                    <li>Любые виды оружия, в т.ч. гражданские средства самообороны, макеты
+                                        массо-габаритные, взрывчатые вещества, боеприпасы. Услуги по ремонту и тюнингу
+                                        оружия.
+                                    </li>
+                                    <li>Подделка документов.</li>
+                                    <li>SIM-карты и услуги подключения к операторам мобильной связи.</li>
+                                    <li>Государственные награды РФ, РСФСР, СССР, а также их копии, муляжи и макеты.</li>
+                                    <li>SPAM-услуги, взлом программного обеспечения, разного рода &laquo;накрутки&raquo;
+                                        голосов, лайков и пр.
+                                    </li>
+                                    <li>Услуги прохождения техосмотра, продажа диагностических карт, полисов КАСКО,
+                                        ОСАГО и иные аналогичные предложения.
+                                    </li>
+                                    <li>Услуги прописки и регистрации.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <!--/noindex-->
+                        <p>С более подробным списком требований к размещаемым объявлениям вы можете ознакомиться в <a
+                                    target="_blank"
+                                    href="/help/terms_of_service/">Соглашении об условиях использования сайта</a>.</p>
+                        <p>По усмотрению владельцев сайта любое объявление может быть отклонено или снято с
+                            публикации без объяснения причин.</p>
+                    </div>
+                </aside>
+
+                <aside class="rules">
+                    <div class="rules_text">
+                        <div class="bheader">Крайне не приветствуется:</div>
+                        <ul>
+                            <li>Клонирование объявлений &mdash; не нужно по сто раз размещать одно и то же объявление.
+                                На нашем сайте для <a href="/user/frontend-registration/">зарегистрированных</a>
+                                пользователей есть специальная
+                                бесплатная функция &laquo;Поднять объявление&raquo;.<br><br>
+                                Клонированные объявления, вышедшие по своему количеству за пределы разумного, будут
+                                удалены.
+                            </li>
+                            <li>Размещение объявлений, в которых описывается более одного объекта сделки.
+                                Такие объявления малоэффективны как для продавцов, так и для покупателей.
+                            </li>
+                            <li>Размещение объявлений в неподходящих разделах каталога.</li>
+                        </ul>
+                    </div>
+                </aside>
+
+                <?php if ($this->getCurrentUser()->isGuest()): ?>
+                    <aside class="rules">
+                        <div class="rules_text">
+                            <p>Полезный совет:</p>
+                            <p>Если вы, будучи не зарегистрированным пользователем, подали на сайт объявления,
+                                то при <a href="/user/frontend-registration/">регистрации в системе</a> ваши объявления
+                                автоматически привяжутся к вашему
+                                аккаунту на сайте! Это произойдет при условии, если в момент регистрации вы будете
+                                использовать тот же обозреватель,
+                                через который изначально подавали объявления на наш сайт.</p>
+                            <p>Регистрация позволит вам управлять вашими объявлениями:</p>
+                            <ul>
+                                <li>Редактировать объявления</li>
+                                <li>Бесплатно поднимать их в результатах поиска</li>
+                                <li>Приостанавливать или возобновлять показ объявлений</li>
+                                <li>Удалять объявления</li>
+                            </ul>
+                        </div>
+                    </aside>
+                <?php endif; ?>
+                <!-- /left -->
+            </div>
+        </div>
+        <div class="right_column">
+            <div class="right_column_content">
+                <!-- right -->
+
+                <div class="description_before_fields extended extended_without_icon extended_width_100 magrin_bottom_20 extended_noborder">
+                    <ul>
+                        <li>Подаваемые вами объявления должны соответствовать <a target="_blank"
+                                                                                 href="/help/terms_of_service/#p3">правилам
+                                размещения объявлений</a>. Если вы не знаете, как правильно подать объявление,
+                            ознакомьтесь с
+                            <a target="_blank" href="/help/poleznye_sovety">советами по размещению
+                                объявлений</a>.
+                        </li>
+                        <li>Все объявления проверяются на соответствие правилам размещения объявлений,
+                            если объявление будет размещено с нарушениями правил &mdash; оно будет
+                            удалено, а аккаунт пользователя &mdash; заблокирован.
+                        </li>
+                        <?php if ($this->getCurrentUser()->isGuest()): ?>
+                            <li>Если в ваших планах подавать большое количество объявлений,
+                                то крайне рекомендуем пройти процедуру <a target="_blank"
+                                                                          href="/user/frontend-registration/">регистрации</a>.
+                            </li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+
+                <fieldset>
+                    <legend>Фотографии объявления</legend>
+                    <div class="photo_rules">
+                        <ul>
+                            <li>Первое загруженное изображение будет основным.</li>
+                            <li>Макимальный размер загружаемого файла &mdash;
+                                <b><?= Registry::getInstance()->get('UPLOAD.MAX_FILE_SIZE') ?></b>.
+                            </li>
+                            <li>Максимальное количество изображений
+                                &mdash; <b><?= Registry::getInstance()->get('UPLOAD.MAX_FILES_COUNT') ?></b>.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div id="uploaded_images"<?php if ($advert->getThumbnailsList()->count()): ?> class="display"<?php endif; ?>>
+                        <?php if ($advert->getThumbnailsList()->count()): ?>
+                            <?php
+                            /** @var Thumbnail $thumbnail */
+                            foreach ($advert->getThumbnailsList() as $thumbnail): ?><span><img
+                                        src="/i/small<?= $thumbnail->getFullHttpPath() ?>" alt=""><a
+                                        data-advert="<?= $thumbnail->getIdAdvert() ?>"
+                                        data-id="<?= $thumbnail->getId() ?>" title="Удалить изображение" href="#"></a>
+                                </span><?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+
+                    <iframe width="0" height="0" name="iframe"></iframe>
+
+                    <form id="file_upload_form" method="post" enctype="multipart/form-data" target="iframe">
+                        <div style="display: none" id="thumbnail_errors"
+                             class="description_before_fields extended_error arrow_bottom"></div>
+                        <input type="hidden" name="MAX_FILE_SIZE" value="<?= Strings::getBytesFromString(
+                            Registry::getInstance()->get('UPLOAD.MAX_FILE_SIZE')
+                        ); ?>">
+                        Загрузить изображение: <input type="file" name="file" id="file"
+                                                      accept="image/jpeg,image/jpg,image/png,image/gif,image/pjpeg"
+                                                      data-checked="0">
+                        <?php if ($advert->getThumbnailsList()->count() == Registry::getInstance()->get('UPLOAD.MAX_FILES_COUNT')): ?>
+                            <div class="description_before_fields extended_error arrow_top">
+                                Загружено максимально-допустимое количество изображений
+                                (<?= Registry::getInstance()->get('UPLOAD.MAX_FILES_COUNT') ?> шт.). Можете удалить одни
+                                изображения и загрузить другие.
+                            </div>
+                        <?php endif; ?>
+                    </form>
+                </fieldset>
+
+
+                <form method="post" action="<?= $this->getRequest()->getRequestUri()->getEscapeUriValue() ?>"
+                      id="main_form">
+                    <fieldset>
+                        <legend>Основные параметры объявления</legend>
+
+                        <div class="field_row">
+                            <div class="compulsory">
+                                Категория:
+                            </div>
+                            <div class="group">
+                                <div class="fields_wrap">
+                                    <div id="js-select-category-wrapper"></div>
+
+                                    <div class="description_before_fields extended_without_icon ">
+                                        <p>Почти в каждой тематической рубрике на сайте есть раздел «Услуги» и
+                                            «Товары».</p>
+                                        <ul>
+                                            <li>Если ваше объявление связано с предоставлением или спросом на услугу, то
+                                                выбирайте раздел «Услуги».
+                                            </li>
+                                            <li>В противном случае выбирайте разделы связанные с купле-продажей
+                                                товаров.
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('category')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label class="compulsory">
+                                Тип объявления:
+                            </label>
+                            <div class="group radiobuttons_classic">
+                                <?= $this->getHelper(Form::class)->inputHidden(
+                                    'advert[type]',
+                                    '',
+                                    ['id' => 'advert_type']
+                                )->getHtml() ?>
+
+                                <span id="js_category_radiobuttons">
+                                    <span class="select_category_notification">
+                                        Уточните категорию, выбрав в списке выше необходмый пункт
+                                    </span>
+                                </span>
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('type')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="advert_header" class="compulsory">
+                                Заголовок объявления:
+                            </label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputText(
+                                    'advert[header]',
+                                    $advert->getHeader(),
+                                    [
+                                        'maxlength' => 150,
+                                        'required' => 'required',
+                                        'id' => 'advert_header',
+                                        'autocapitalize' => 'sentences',
+                                        'class' => 'advert_header'
+                                    ]
+                                )->getHtml() ?>
+
+                                <!--noindex-->
+                                <div class="animate_field_description">
+                                    <div class="animate_field_content">
+                                        <div class="description_before_fields">
+                                            <ul>
+                                                <li>Не пишите в данном поле информацию про город &mdash; он подставится
+                                                    автоматически (куда нужно).
+                                                </li>
+                                                <li>Чётко опишите предмет совершения сделки или услуги.
+                                                    Например: &laquo;<em>Автомобиль ВАЗ-2108</em>&raquo;, &laquo;<em>Строительство
+                                                        домов под ключ</em>&raquo;.<br>
+                                                </li>
+                                                <li>Не пишите в данном поле цену или контактные данные &mdash; для этой
+                                                    информации есть специальные поля ниже.
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="triangle-right-border"></div>
+                                    <div class="triangle-right"></div>
+                                </div>
+                                <!--/noindex-->
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('header')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="label_advert_balance">Остаток, количество (заполняется только для
+                                товаров):</label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputNumber(
+                                    'advert[balance]',
+                                    $advert->getBalance(),
+                                    [
+                                        'id' => 'label_advert_balance',
+                                        'class' => 'inegers',
+                                        'max' => 9999,
+                                        'min' => 0,
+                                    ]
+                                )->getHtml() ?>
+
+                                <!--noindex-->
+                                <div class="animate_field_description">
+                                    <div class="animate_field_content">
+                                        <div class="description_before_fields">
+                                            <p>Укажите количество товара в наличии.</p>
+                                            <p>Это позволит вам вести учёт товара и поиск по остаткам в личном
+                                                кабинете, а пользователи сайта смогут увидеть, какое кол-во данного
+                                                товара есть у вас в наличии.</p>
+                                        </div>
+                                    </div>
+                                    <div class="triangle-right-border"></div>
+                                    <div class="triangle-right"></div>
+                                </div>
+                                <!--/noindex-->
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('balance')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="advert_text" class="compulsory">
+                                Текст объявления:
+                            </label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputTextarea(
+                                    'advert[text]',
+                                    $advert->getText(),
+                                    ['id' => 'advert_text', 'required' => 'required',]
+                                )->getHtml() ?>
+
+                                <!--noindex-->
+                                <div class="animate_field_description">
+                                    <div class="animate_field_content">
+                                        <div class="description_before_fields">
+                                            <p>Не указывайте в данном поле цену или контактные данные &mdash; для
+                                                этой информации есть специальные поля ниже.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="triangle-right-border"></div>
+                                    <div class="triangle-right"></div>
+                                </div>
+                                <!--/noindex-->
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('text')
+                                ) ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="advert_price">Цена:</label>
+                            <div class="group">
+                                <div class="fields_wrap">
+                                    <?= $this->getHelper(Form::class)->inputNumber(
+                                        'advert[price]',
+                                        $advert->getPrice(),
+                                        [
+                                            'id' => 'advert_price',
+                                            'class' => 'inegers',
+                                            'min' => 0,
+                                        ]
+                                    )->getHtml() ?>
+
+                                    <!--noindex-->
+                                    <div class="animate_field_description">
+                                        <div class="animate_field_content">
+                                            <div class="description_before_fields">
+                                                <p>Укажите цену товара или услуги</p>
+                                                <ul>
+                                                    <li>Пожалуйста, не указывайте в это поле &laquo;ложные&raquo; цены,
+                                                        наподобие 1 рубля. Если не хотите указывать цену &mdash; просто
+                                                        её не указывайте.
+                                                    </li>
+                                                    <li>Отсутствие цены будет расцениваться как «Цена договорная».</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="triangle-right-border"></div>
+                                        <div class="triangle-right"></div>
+                                    </div><!--/noindex--><?php
+                                    /* @var $select ElementSelect */
+                                    $select = $this->getHelper(Form::class)->inputSelect(
+                                        'advert[price_type]',
+                                        $advert->getPriceType()->getValue(),
+                                        ['class' => 'price_type']
+                                    );
+                                    foreach (PriceType::TYPES as $price_code => $price_data):
+                                        $select->addOption(
+                                            $this->getHelper(Form::class)->inputOption($price_code, $price_data[0])
+                                        );
+                                    endforeach;
+                                    echo $select->getHtml();
+                                    ?>
+                                    <?= $this->getHelper(Form::class)->getFieldError(
+                                        $this->getErrors()->get('price')
+                                    ) ?>
+
+                                    <div>
+                                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                                            'advert[free]', 1, 0,
+                                            $advert->getFree(),
+                                            [
+                                                'id' => 'label_free',
+                                                'onclick' => "if (this.checked) document.getElementById('advert_price').value = '';"
+                                            ]
+                                        ) ?>
+                                        <div class="animate_field_description animate_field_description_free">
+                                            <div class="animate_field_content">
+                                                <div class="description_before_fields">
+                                                    <p>Отметьте этот параметр только в том случае, если Вы что-то
+                                                        отдаёте
+                                                        или хотите взять исключительно даром.</p>
+                                                </div>
+                                            </div>
+                                            <div class="triangle-right-border"></div>
+                                            <div class="triangle-right"></div>
+                                        </div>
+                                        <label for="label_free"> даром</label>
+                                        <?= $this->getHelper(Form::class)->getFieldError(
+                                            $this->getErrors()->get('free')
+                                        ) ?>
+                                    </div>
+                                    <?= $this->getHelper(Form::class)->getFieldError(
+                                        $this->getErrors()->get('price_type')
+                                    ) ?>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>Контактная информация</legend>
+
+                        <?php if ($this->getErrors()->get('contact_info')): ?>
+                            <div class="field_row_fake">
+                                <div></div>
+                                <div class="group">
+                                    <div class="fields_wrap">
+                                        <?= $this->getHelper(Form::class)->getFieldError(
+                                            $this->getErrors()->get('contact_info'), 'arrow_bottom'
+                                        ) ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="field_row">
+                            <label for="advert_user_name">Контактное лицо:</label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputText(
+                                    'advert[user_name]',
+                                    $advert->getUserName(),
+                                    [
+                                        'maxlength' => 50,
+                                        'id' => 'advert_user_name',
+                                        'autocomplete' => 'on'
+                                    ]
+                                )->getHtml() ?>
+                                <?= $this->getHelper(Form::class)->getFieldError($this->getErrors()->get('user_name')) ?>
+
+                                <?php if ($this->getCurrentUser()->getFullName() && !$this->getCurrentUser()->isGuest()): ?>
+                                    <p>
+                                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                                            'advert[main_user_name]', 1, 0,
+                                            $advert->getMainUserName(),
+                                            ['id' => 'label_main_user_name']
+                                        ) ?>
+                                        <label for="label_main_user_name">
+                                            Указать контактное лицо:
+                                            <span class="use_my_main_contact">
+                                                <?= $this->getCurrentUser()->getFullName() ?>
+                                            </span>
+                                        </label>
+                                    </p>
+                                <?php else: ?>
+                                    <?= $this->getHelper(Form::class)->inputHidden('advert[main_user_name]', 0)->getHtml() ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="advert_phone">Телефон:</label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputText(
+                                    'advert[phone]',
+                                    $advert->getPhone(),
+                                    [
+                                        'maxlength' => 255,
+                                        'id' => 'advert_phone',
+                                        'autocomplete' => 'on',
+                                        'data-tel-input' => 'data-tel-input'
+                                    ]
+                                )->getHtml() ?>
+
+                                <!--noindex-->
+                                <div class="animate_field_description">
+                                    <div class="animate_field_content">
+                                        <div class="description_before_fields">
+                                            <p>Номер телефона в международном формате, пример: +7 (999) 111-22-33<br>
+                                                Допустимые для ввода номера: Россия, Украина, Белоруссия, Казахстан.</p>
+                                        </div>
+                                    </div>
+                                    <div class="triangle-right-border"></div>
+                                    <div class="triangle-right"></div>
+                                </div>
+                                <!--/noindex-->
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('phone')
+                                ) ?>
+
+                                <?php if ($this->getCurrentUser()->getPhone()): ?>
+                                    <p>
+                                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                                            'advert[main_phone]', 1, 0,
+                                            $advert->getMainPhone(),
+                                            ['id' => 'label_main_phone']
+                                        ) ?>
+                                        <label for="label_main_phone">
+                                            Использовать для связи мой основной телефон:
+                                            <span class="use_my_main_contact">
+                                                <?= $this->getCurrentUser()->getPhone() ?>
+                                            </span>
+                                        </label>
+                                    </p>
+                                <?php else: ?>
+                                    <?= $this->getHelper(Form::class)->inputHidden('advert[main_phone]', 0)->getHtml() ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="advert_email">Email-адрес:</label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputEmail(
+                                    'advert[email]',
+                                    $advert->getEmail()->getValue(),
+                                    [
+                                        'maxlength' => 255,
+                                        'id' => 'advert_email',
+                                        'autocomplete' => 'on'
+                                    ]
+                                )->getHtml() ?>
+
+                                <!--noindex-->
+                                <div class="animate_field_description">
+                                    <div class="animate_field_content">
+                                        <div class="description_before_fields">
+                                            <p>Не указывайте более одного email-адреса!</p>
+                                        </div>
+                                    </div>
+                                    <div class="triangle-right-border"></div>
+                                    <div class="triangle-right"></div>
+                                </div>
+                                <!--/noindex-->
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('email')
+                                ) ?>
+
+                                <?php if ($this->getCurrentUser()->getEmail()->getValue()): ?>
+                                    <p>
+                                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                                            'advert[main_email]', 1, 0,
+                                            $advert->getMainEmail(),
+                                            ['id' => 'label_main_email']
+                                        ) ?>
+                                        <label for="label_main_email">
+                                            Использовать для связи мой основной email-адрес:
+                                            <span class="use_my_main_contact">
+                                                <?= $this->getCurrentUser()->getEmail()->getValue() ?>
+                                            </span>
+                                        </label>
+                                    </p>
+                                <?php else: ?>
+                                    <?= $this->getHelper(Form::class)->inputHidden('advert[main_email]', 0)->getHtml() ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="advert_url">Web-сайт:</label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputUrl(
+                                    'advert[url]',
+                                    $advert->getUrl()->getValue(),
+                                    [
+                                        'maxlength' => 255,
+                                        'id' => 'advert_url',
+                                        'autocomplete' => 'on'
+                                    ]
+                                )->getHtml() ?>
+
+                                <!--noindex-->
+                                <div class="animate_field_description">
+                                    <div class="animate_field_content">
+                                        <div class="description_before_fields">
+                                            <p>Введите адрес начиная с http:// или https://</p>
+                                        </div>
+                                    </div>
+                                    <div class="triangle-right-border"></div>
+                                    <div class="triangle-right"></div>
+                                </div>
+                                <!--/noindex-->
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('url')
+                                ) ?>
+
+                                <?php if ($this->getCurrentUser()->getUrl()->getValue()): ?>
+                                    <p>
+                                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                                            'advert[main_url]', 1, 0,
+                                            $advert->getMainUrl(),
+                                            ['id' => 'label_main_url']
+                                        ) ?>
+                                        <label for="label_main_url">
+                                            Использовать для связи мой основной URL-адрес:
+                                            <span class="use_my_main_contact">
+                                                <?= $this->getCurrentUser()->getUrl()->getNiceAnchor() ?>
+                                            </span>
+                                        </label>
+                                    </p>
+                                <?php else: ?>
+                                    <?= $this->getHelper(Form::class)->inputHidden('advert[main_url]', 0)->getHtml() ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="advert_telegram">Telegram (никнейм):</label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputText(
+                                    'advert[telegram]',
+                                    $advert->getTelegram(),
+                                    [
+                                        'id' => 'advert_telegram',
+                                        'autocomplete' => 'on',
+                                        'maxlength' => TelegramValidator::MAX_LENGTH
+                                    ]
+                                )->getHtml() ?>
+
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('telegram')
+                                ) ?>
+
+                                <?php if ($this->getCurrentUser()->getTelegram()): ?>
+                                    <p>
+                                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                                            'advert[main_telegram]', 1, 0,
+                                            $advert->getMainTelegram(),
+                                            ['id' => 'label_main_telegram']
+                                        ) ?>
+                                        <label for="label_main_telegram">
+                                            Использовать для связи мой основной Telegram:
+                                            <span class="use_my_main_contact">
+                                                <?= $this->getCurrentUser()->getTelegram() ?>
+                                            </span>
+                                        </label>
+                                    </p>
+                                <?php else: ?>
+                                    <?= $this->getHelper(Form::class)->inputHidden('advert[main_telegram]', 0)->getHtml() ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <div class="field_row">
+                            <label for="advert_skype">Skype:</label>
+                            <div class="group">
+                                <?= $this->getHelper(Form::class)->inputText(
+                                    'advert[skype]',
+                                    $advert->getSkype(),
+                                    [
+                                        'maxlength' => StringLengthValidator::MD5_MAX_LENGTH,
+                                        'id' => 'advert_skype',
+                                        'autocomplete' => 'on'
+                                    ]
+                                )->getHtml() ?>
+                                <?= $this->getHelper(Form::class)->getFieldError(
+                                    $this->getErrors()->get('skype')
+                                ) ?>
+
+                                <?php if ($this->getCurrentUser()->getSkype()): ?>
+                                    <p>
+                                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                                            'advert[main_skype]', 1, 0,
+                                            $advert->getMainSkype(),
+                                            ['id' => 'label_main_skype']
+                                        ) ?>
+                                        <label for="label_main_skype">
+                                            Использовать для связи мой основной Skype:
+                                            <span class="use_my_main_contact">
+                                                <?= $this->getCurrentUser()->getSkype() ?>
+                                            </span>
+                                        </label>
+                                    </p>
+                                <?php else: ?>
+                                    <?= $this->getHelper(Form::class)->inputHidden('advert[main_skype]', 0)->getHtml() ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <?php if (!$this->getCurrentUser()->isGuest() && $this->getCurrentUser()->getContact()): ?>
+                            <div class="field_row">
+                                <label for="label_advert_use_contact">Контактная информация:</label>
+                                <div class="group">
+                                    <p>
+                                        <?= $this->getHelper(Form::class)->inputFullCheckbox(
+                                            'advert[use_contact]', 1, 0,
+                                            $advert->getUseContact(),
+                                            ['id' => 'label_advert_use_contact']
+                                        ) ?>
+                                        <label for="label_advert_use_contact">
+                                            Показывать в объявлении мои контактные данные:
+                                        </label>
+                                        <span class="use_my_main_contact use_contact">
+                                            <?= Format::outPut($this->getCurrentUser()->getContact()) ?>
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="field_row">
+                            <label class="compulsory">
+                                Укажите территориальное местоположение объекта сделки
+                                или территориальное расположение вашей организации:
+                            </label>
+                            <div class="group">
+                                <div class="fields_wrap cities">
+                                    <p>
+                                        <span>Страна:</span>
+                                        <span id="js_country_select_wrap"></span>
+                                        <?= $this->getHelper(Form::class)->getFieldError(
+                                            $this->getErrors()->get('place_country')
+                                        ) ?>
+                                    </p>
+                                    <p>
+                                        <span>Регион:</span>
+                                        <span id="js_region_select_wrap"></span>
+                                        <?= $this->getHelper(Form::class)->getFieldError(
+                                            $this->getErrors()->get('place_region')
+                                        ) ?>
+                                    </p>
+                                    <p>
+                                        <span>Город:</span>
+                                        <span id="js_city_select_wrap"></span>
+                                        <?= $this->getHelper(Form::class)->getFieldError(
+                                            $this->getErrors()->get('place_city')
+                                        ) ?>
+                                    </p>
+
+                                    <?php
+                                    if (
+                                        $this->getCurrentUser()->isGuest() or
+                                        !$this->getCurrentUser()->isGuest() &&
+                                        !$this->getCurrentUser()->getCountry() &&
+                                        !$this->getCurrentUser()->getRegion() &&
+                                        !$this->getCurrentUser()->getCity()
+                                    ):
+                                        ?>
+                                        <div class="simple_city_checked">
+                                            <p>Быстрое указание местоположения:</p>
+                                            <dl>
+                                                <dt id="ru_icon">Россия:</dt>
+                                                <dd>
+                                                    <a href="#" onclick="return simple_city_checked(3159, 4312, 4400)">Москва</a>,
+                                                    <a href="#" onclick="return simple_city_checked(3159, 4925, 4962)">Санкт-Петербург</a>,
+                                                    <a href="#" onclick="return simple_city_checked(3159, 4528, 4549)">Новосибирск</a>,
+                                                    <a href="#" onclick="return simple_city_checked(3159, 5080, 5106)">Екатеринбург</a>,
+                                                    <a href="#" onclick="return simple_city_checked(3159, 3563, 3612)">Нижний
+                                                        Новгород</a>,
+                                                    <a href="#" onclick="return simple_city_checked(3159, 5246, 5269)">Казань</a>,
+                                                    <a href="#" onclick="return simple_city_checked(3159, 4891, 4917)">Самара</a>,
+                                                    <a href="#" onclick="return simple_city_checked(3159, 5507, 5539)">Челябинск</a>,
+                                                    <a href="#" onclick="return simple_city_checked(3159, 4561, 4580)">Омск</a>,
+                                                    <a href="#" onclick="return simple_city_checked(3159, 4800, 4848)">Ростов-на-Дону</a>,
+                                                    <a href="#" onclick="return simple_city_checked(3159, 3296, 3345)">Уфа</a>,
+                                                    <a href="#" onclick="return simple_city_checked(3159, 4105, 4149)">Красноярск</a>,
+                                                    <a href="#" onclick="return simple_city_checked(3159, 4689, 4720)">Пермь</a>
+                                                    <a href="#" onclick="return simple_city_checked(3159, 3468, 3472)">Волгоград</a>,
+                                                    <a href="#" onclick="return simple_city_checked(3159, 3529, 3538)">Воронеж</a>
+                                                </dd>
+
+                                                <dt id="nr_icon">Новороссия:</dt>
+                                                <dd>
+                                                    <a href="#"
+                                                       onclick="return simple_city_checked(9909, 10002, 10029)">Донецк</a>,
+                                                    <a href="#"
+                                                       onclick="return simple_city_checked(9909, 10259, 10299)">Луганск</a>,
+                                                    <a href="#"
+                                                       onclick="return simple_city_checked(9909, 10002, 10046)">Макеевка</a>
+                                                </dd>
+
+                                                <dt id="by_icon">Белорусия:</dt>
+                                                <dd>
+                                                    <a href="#" onclick="return simple_city_checked(248, 349, 269)">Минск</a>,
+                                                    <a href="#" onclick="return simple_city_checked(248, 304, 312)">Гомель</a>,
+                                                    <a href="#" onclick="return simple_city_checked(248, 377, 393)">Могилёв</a>,
+                                                    <a href="#" onclick="return simple_city_checked(248, 272, 281)">Витебск</a>,
+                                                    <a href="#" onclick="return simple_city_checked(248, 330, 334)">Гродно</a>,
+                                                    <a href="#" onclick="return simple_city_checked(248, 249, 255)">Брест</a>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <?php if ($this->getCurrentUser()->isGuest()): ?>
+                            <div class="field_row">
+                                <label for="captcha_code" class="compulsory">
+                                    Введите цифры с изображения:
+                                </label>
+                                <div class="group captcha_block">
+                                    <div class="fields_wrap">
+                                        <?= $this->getHelper(Form::class)->inputNumber(
+                                            'captcha_code',
+                                            $captcha_code,
+                                            [
+                                                'required' => 'required',
+                                                'id' => 'captcha_code',
+                                                'min' => 0,
+                                                'max' => 9999,
+                                            ]
+                                        )->getHtml() ?>
+                                        <div
+                                                class="animate_field_description animate_field_captcha">
+                                            <div class="animate_field_content">
+                                                <div class="description_before_fields">
+                                                    Если вы не видите число на картинке, нажмите на картинку мышкой
+                                                </div>
+                                            </div>
+                                            <div class="triangle-right-border"></div>
+                                            <div class="triangle-right"></div>
+                                        </div><!--
+                                     --><img data-src="/captcha/main/?session_name=<?= $session_name ?>&amp;session_id=<?= $session_id ?>"
+                                             onclick="this.src=this.getAttribute('data-src')+'&'+Math.random()" alt=""
+                                             title="Если вы не видите число на картинке, нажмите на картинку мышкой"
+                                             src="/captcha/main/?session_name=<?= $session_name ?>&amp;session_id=<?= $session_id ?>">
+                                        <?= $this->getHelper(Form::class)->inputHidden($session_name, $session_id)->getHtml() ?>
+                                        <div class="description_before_fields extended_without_icon">
+                                            Если вы не видите число на картинке, нажмите на картинку мышкой
+                                        </div>
+                                        <?= $this->getHelper(Form::class)->getFieldError(
+                                            $this->getErrors()->get('captcha')
+                                        ) ?>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="field_row">
+                                <label for="terms_of_service" class="compulsory">
+                                    Условия использования сайта:
+                                </label>
+                                <div class="group">
+                                    <?= $this->getHelper(Form::class)->inputCheckbox(
+                                        'terms_of_service',
+                                        1,
+                                        $terms_of_service,
+                                        ['id' => 'terms_of_service', 'required' => 'required']
+                                    )->getHtml() ?>
+                                    <label for="terms_of_service">
+                                        С <a rel="nofollow" target="_blank" href="/help/terms_of_service/">условиями
+                                            использования
+                                            сайта</a> ознакомлен(а) и принимаю данные условия.
+                                    </label>
+                                    <?= $this->getHelper(Form::class)->getFieldError(
+                                        $this->getErrors()->get('terms_of_service')
+                                    ) ?>
+                                </div>
+                            </div>
+
+                            <div class="field_row">
+                                <label for="terms_of_privacy" class="compulsory">
+                                    Политика обработки персональных данных:
+                                </label>
+                                <div class="group">
+                                    <?= $this->getHelper(Form::class)->inputCheckbox(
+                                        'terms_of_privacy',
+                                        1,
+                                        $terms_of_privacy,
+                                        ['id' => 'terms_of_privacy', 'required' => 'required']
+                                    )->getHtml() ?>
+                                    <label for="terms_of_privacy">
+                                        С <a rel="nofollow" target="_blank" href="/help/privacy">политикой в отношении
+                                            обработки персональных данных</a> ознакомлен(а) и принимаю данную политику.
+                                    </label>
+                                    <?= $this->getHelper(Form::class)->getFieldError(
+                                        $this->getErrors()->get('terms_of_privacy')
+                                    ) ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                    </fieldset>
+
+                    <?= $this->getHelper(Form::class)->inputHidden('advert[id]', $advert->getId())->getHtml() ?>
+
+                    <?php if ($advert->getThumbnailsList()->count()): ?>
+                        <?php foreach ($advert->getThumbnailsList() as $thumbnail): ?>
+                            <input type="hidden" name="thumbnail[]" value="<?= $thumbnail->getId() ?>">
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+
+                    <?= $this->getHelper(Form::class)->inputSubmit(
+                        'submit_normal',
+                        $advert->getId() ? 'Сохранить объявление' : 'Разместить объявление',
+                        ['class' => 'big_button button_margin_auto']
+                    )->getHtml() ?>
+                </form>
+                <!-- /right -->
+            </div>
+        </div>
+    </div>
+
+    <!-- end content -->
+</div>
+
+<script>
+    var window = this;
+    document.addEventListener("DOMContentLoaded", function () {
+        Krugozor.Location.addCheckedUserLocation(1, '<?=$advert->getPlaceCountry()?>');
+        Krugozor.Location.addCheckedUserLocation(2, '<?=$advert->getPlaceRegion()?>');
+        Krugozor.Location.addCheckedUserLocation(3, '<?=$advert->getPlaceCity()?>');
+
+        var select_country_attributes = {
+            name: 'advert[place_country]',
+            value: '<?=$advert->getPlaceCountry()?>'
+        };
+        window.selectCountryObj = Krugozor.Location.createLocation(select_country_attributes, 'Выберите страну проживания');
+        document.getElementById('js_country_select_wrap').appendChild(window.selectCountryObj.SelectElement);
+
+        var select_region_attributes = {
+            name: 'advert[place_region]',
+            value: '<?=$advert->getPlaceRegion()?>'
+        };
+        window.selectRegionObj = Krugozor.Location.createLocation(select_region_attributes, 'Выберите регион проживания');
+        document.getElementById('js_region_select_wrap').appendChild(window.selectRegionObj.SelectElement);
+
+        var select_city_attributes = {
+            name: 'advert[place_city]',
+            value: '<?=$advert->getPlaceCity()?>'
+        };
+        window.selectCityObj = Krugozor.Location.createLocation(select_city_attributes, 'Выберите город проживания');
+        document.getElementById('js_city_select_wrap').appendChild(window.selectCityObj.SelectElement);
+
+        window.selectCountryObj.create(1, 0);
+        window.selectRegionObj.create(2, <?=(int) $advert->getPlaceCountry()?>);
+        window.selectCityObj.create(3, <?=(int) $advert->getPlaceRegion()?>);
+    });
+</script>
+
+<?php include $this->getRealTemplatePath('Local/FrontendBottom') ?>
+
+</body>
+</html>

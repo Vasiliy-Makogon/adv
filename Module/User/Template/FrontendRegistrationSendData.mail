@@ -1,0 +1,15 @@
+Здравствуйте<? if ($this->user->getFullName()): ?>, <?=$this->user->getFullName()?><? endif; ?>!
+
+<?=$this->user->getRegdate()->format('d.m.Y')?> в <?=$this->user->getRegdate()->format('H:i')?> Вы зарегистрировались на сайте '<?=$this->hostinfo->get('DOMAIN_AS_TEXT')?>'.
+Ваши регистрационные данные приведены ниже. Сохраните это письмо.
+
+Ваш логин: <?=$this->user->getLogin()?>
+
+Ваш пароль: <?=$this->user_password?>
+
+Регистрационный email: <?=$this->user->getEmail()->getValue()?>
+
+
+
+Пожалуйста, не отвечайте на это письмо, т.к. оно сгенерировано роботом.
+С уважением, администрация сервера <?=$this->hostinfo->get('DOMAIN_AS_TEXT')?>

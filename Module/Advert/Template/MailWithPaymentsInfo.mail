@@ -1,0 +1,14 @@
+Здравствуйте<? if ($this->user->getFullName()): ?>, <?=$this->user->getFullName()?><? endif; ?>!
+
+Сообщаем Вам, что Ваше объявление «<?=$this->advert->getHeader()?>» размещено на сайте '<?=$this->hostinfo->get('DOMAIN_AS_TEXT')?>'!
+
+Постоянный адрес Вашего объявления: <?=$this->hostinfo->get('HOST_AS_TEXT')?>/advert/<?=$this->advert->getId()?>.xhtml
+
+Мы очень надеемся, что наш сервис поможет Вам поскорее получить желаемую выгоду от намечающейся сделки.
+Вы можете воспользоваться платными услугами для достижения наилучшего рузультата от поданного объявления:
+
+За <?=$this->payments->get('PAYMENT_ACTION_TOP')?> руб. разместить объявление в блоке VIP: <?=$this->advert->getMerchant()->getShortMerchantUrl(Krugozor\Framework\Module\Advert\PaymentActionsEnum::ACTION_TOP)?>
+
+
+Пожалуйста, не отвечайте на это письмо, т.к. оно сгенерировано роботом.
+С уважением, администрация сервера <?=$this->hostinfo->get('DOMAIN_AS_TEXT')?>

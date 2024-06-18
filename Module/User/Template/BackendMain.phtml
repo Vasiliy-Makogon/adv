@@ -1,0 +1,289 @@
+<?php
+
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Helper\SortLink;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Common\Model\Fake;
+use Krugozor\Framework\Module\User\Model\City;
+use Krugozor\Framework\Module\User\Model\Country;
+use Krugozor\Framework\Module\User\Model\Region;
+use Krugozor\Framework\Module\User\Model\User;
+use Krugozor\Framework\Module\User\Service\UserListService;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+$user_country = $this->getRequest()->getRequest('user_country', Request::SANITIZE_INT);
+$user_region = $this->getRequest()->getRequest('user_region', Request::SANITIZE_INT);
+$user_city = $this->getRequest()->getRequest('user_city', Request::SANITIZE_INT);
+$colsearch = $this->getRequest()->getRequest('colsearch', Request::SANITIZE_STRING);
+$user_active = $this->getRequest()->getRequest('user_active', Request::SANITIZE_INT);
+$keyword = $this->getRequest()->getRequest('keyword', Request::SANITIZE_STRING);
+
+/** @var UserListService $userListService */
+$userListService = $this->getStorage()->get('userListService');
+$userListService
+    ->getPagination()
+    ->getHelper()
+    ->setCssNormalLinkClass('navigation_normal_link')
+    ->setCssActiveLinkClass('navigation_active_link')
+    ->setRequestUriParameter('field_name', $userListService->getAlias())
+    ->setRequestUriParameter('sort_order', $userListService->getOrder())
+    ->setRequestUriParameter('keyword', $keyword)
+    ->setRequestUriParameter('colsearch', $colsearch)
+    ->setRequestUriParameter('user_active', $user_active)
+    ->setRequestUriParameter('user_city', $user_city)
+    ->setRequestUriParameter('user_region', $user_region)
+    ->setRequestUriParameter('user_country', $user_country);
+
+$pagination = $userListService->getPagination();
+
+$sortLink = new SortLink();
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+        'user' => ['backend-main.css'],
+    ]) ?>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+    <?= $this->getJs() ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+<menu class="main">
+    <li><a href="/user/backend-edit/">Добавление пользователя</a></li>
+</menu>
+
+<?php include $this->getRealTemplatePath('Common/Navigation') ?>
+
+<table class="datatable">
+    <thead>
+    <tr>
+        <th colspan="8">
+            Список пользователей
+        </th>
+    </tr>
+    <tr>
+        <th>
+            <?php
+            echo $sortLink
+                ->setFieldName('id')
+                ->setAnchor($this->getLang()->get('content.id'))
+                ->setUrl($this->getRequest()->getCanonicalRequestUri()->getEscapeUriValue())
+                ->setIconSrc('/img/local/system/icon/')
+                ->setCurrentFieldName($userListService->getAlias())
+                ->setCurrentSortOrder($userListService->getOrder())
+                ->setQueryStringFromArray([
+                    'sep' => $userListService->getPagination()->getCurrentSeparator(),
+                    'page' => $userListService->getPagination()->getCurrentPage(),
+                    'keyword' => $keyword,
+                    'colsearch' => $colsearch,
+                    'user_active' => $user_active,
+                    'user_city' => $user_city,
+                    'user_region' => $user_region,
+                    'user_country' => $user_country
+                ])
+                ->getHtml();
+            ?>
+        </th>
+        <th>
+            <?php
+            echo $sortLink
+                ->setFieldName('login')
+                ->setAnchor('Логин')
+                ->getHtml();
+            ?>
+        </th>
+        <th>
+            <?php
+            echo $sortLink
+                ->setFieldName('active')
+                ->setAnchor('Активность пользователя')
+                ->getHtml();
+            ?>
+        </th>
+        <th>Объявления пользователя</th>
+        <th>Регион</th>
+        <th>
+            <?php
+            echo $sortLink
+                ->setFieldName('ip')
+                ->setAnchor('IP-адрес')
+                ->getHtml();
+            ?>
+        </th>
+        <th colspan="2">
+            <?= $this->getLang()->get('content.actions') ?>
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php if ($userListService->getList()->count()): ?>
+
+        <?php
+        /**
+         * @var Fake $fake
+         * @var Country $country
+         * @var Region $region
+         * @var City $city
+         * @var User $user
+         */
+        foreach ($userListService->getList() as ['fake' => $fake,
+                 'country' => $country,
+                 'region' => $region,
+                 'city' => $city,
+                 'user' => $user]): ?>
+            <tr>
+                <td>
+                    <?= $user->getId() ?>
+                </td>
+                <td>
+                    <a href="/user/backend-edit/?id=<?= $user->getId() ?>">
+                        <?= Format::hsc($user->getLogin()) ?>
+                    </a>
+                </td>
+                <td data-content-yes-no="<?= $user->getActive() ?>">
+                    <?php if ($user->getActive()): ?>
+                        <?= $this->getLang()->get('content.yes') ?>
+                    <?php else: ?>
+                        <?= $this->getLang()->get('content.no') ?>
+                    <?php endif; ?>
+                </td>
+                <td>
+                    <?php if ($fake->getAdvertCount()): ?>
+                        <a href="/advert/backend-main/?user=<?= $user->getId() ?>">
+                            <?= $fake->getAdvertCount() ?>
+                        </a>
+                    <?php else: ?>
+                        0
+                    <?php endif; ?>
+                </td>
+                <td>
+                    <?php if ($user->getCountry()): ?>
+                        <a href="/user/backend-main/?user_country=<?= $country->getId() ?>"><?= $country->getNameRu() ?></a>,
+                    <?php endif; ?>
+                    <?php if ($user->getRegion()): ?>
+                        <a href="/user/backend-main/?user_region=<?= $region->getId() ?>"><?= $region->getNameRu() ?></a>,
+                    <?php endif; ?>
+                    <?php if ($user->getCity()): ?>
+                        <a href="/user/backend-main/?user_city=<?= $city->getId() ?>"><?= $city->getNameRu() ?></a>
+                    <?php endif; ?>
+                </td>
+                <td>
+                    <a href="/user/backend-main/?keyword=<?= $user->getIp() ?>&amp;colsearch=user_ip"><?= $user->getIp() ?></a>
+                </td>
+                <td>
+                    <a href="/user/backend-edit/?id=<?= $user->getId() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>">
+                        <img alt="" src="/img/local/system/icon/edit.png">
+                    </a>
+                </td>
+                <td>
+                    <?php if ($user->isAdministrator() || $user->isGuest()): ?>
+                        <img src="/img/local/system/icon/delete_empty.png" alt="">
+                    <?php else: ?>
+                        <?php
+                        $str = Format::js(
+                            $this->getLang()->get('content.question_delete_user'),
+                            ['user_name' => $user->getFullNameOrLogin(), 'user_id' => $user->getId()]
+                        );
+                        ?>
+                        <a onclick='return confirm(<?= $str ?>)'
+                           href="/user/backend-delete/?id=<?= $user->getId() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>">
+                            <img src="/img/local/system/icon/delete.png" alt="">
+                        </a>
+                    <?php endif; ?>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+
+    <?php else: ?>
+        <tr>
+            <td>
+                <?= $this->getLang()->get('content.not_found_request_data') ?>
+            </td>
+        </tr>
+    <?php endif; ?>
+    </tbody>
+</table>
+
+<form action="<?= $this->getRequest()->getRequestUri()->getEscapeUriValue() ?>" method="get">
+    <table class="datatable">
+        <thead>
+        <tr>
+            <th colspan="3">Поиск пользователей</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th>Что искать</th>
+            <th>Где искать</th>
+            <th>Активность пользователя</th>
+        </tr>
+        <tr>
+            <td>
+                <input type="text" value="<?= Format::hsc($keyword) ?>" name="keyword">
+            </td>
+            <td>
+                <select name="colsearch">
+                    <option value=""<?php if (!$colsearch): ?> selected="selected"<?php endif; ?>>Везде</option>
+                    <option value="user_first_name"<?php if ($colsearch == "user_first_name"): ?> selected="selected"<?php endif; ?>>
+                        Имя пользователя
+                    </option>
+                    <option value="user_telegram"<?php if ($colsearch == "user_telegram"): ?> selected="selected"<?php endif; ?>>
+                        Telegram пользователя
+                    </option>
+                    <option value="user_url"<?php if ($colsearch == "user_url"): ?> selected="selected"<?php endif; ?>>
+                        URL пользователя
+                    </option>
+                    <option value="user_email"<?php if ($colsearch == "user_email"): ?> selected="selected"<?php endif; ?>>
+                        Email пользователя
+                    </option>
+                    <option value="user_login"<?php if ($colsearch == "user_login"): ?> selected="selected"<?php endif; ?>>
+                        Логин пользователя
+                    </option>
+                    <option value="user_id"<?php if ($colsearch == "user_id"): ?> selected="selected"<?php endif; ?>>ID
+                        пользователя
+                    </option>
+                    <option value="user_ip"<?php if ($colsearch == "user_ip"): ?> selected="selected"<?php endif; ?>>IP
+                        пользователя
+                    </option>
+                </select>
+            </td>
+            <td>
+                <select name="user_active">
+                    <option value=""<?php if (!$user_active): ?> selected="selected"<?php endif; ?>>Любые</option>
+                    <option value="1"<?php if ($user_active == '1'): ?> selected="selected"<?php endif; ?>>
+                        Активные
+                    </option>
+                    <option value="0"<?php if ($user_active == '0'): ?> selected="selected"<?php endif; ?>>
+                        Блокированные
+                    </option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="5">
+                <input type="submit" value="Поиск">
+                <input type="reset" class="js_reset_button" value="Сбросить параметры поиска">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</form>
+
+<?php include $this->getRealTemplatePath('Common/Navigation') ?>
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

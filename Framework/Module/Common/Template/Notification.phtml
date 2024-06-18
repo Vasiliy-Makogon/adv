@@ -1,0 +1,27 @@
+<?php
+
+use Krugozor\Framework\Notification;
+use Krugozor\Framework\View;
+
+/* @var $this View */
+
+?>
+<?php if ($this->getNotification() && !$this->getNotification()->getIsHidden()): ?>
+    <div id="notification_<?= $this->getNotification()->getType() ?>"
+         class="notification notification_<?= $this->getNotification()->getType() ?>">
+        <h3>
+            <?php if ($this->getNotification()->getHeader()) : ?>
+                <?= $this->getNotification()->getHeader() ?>
+            <?php else: ?>
+                <?php
+                echo match ($this->getNotification()->getType()) {
+                    Notification::TYPE_ALERT => $this->getLang()->get('notification.header.action_failed'),
+                    Notification::TYPE_WARNING => $this->getLang()->get('notification.header.action_warning'),
+                    default => $this->getLang()->get('notification.header.action_complete')
+                };
+                ?>
+            <?php endif; ?>
+        </h3>
+        <?= $this->getNotification()->getMessage() ?>
+    </div>
+<?php endif; ?>

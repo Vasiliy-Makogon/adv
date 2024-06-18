@@ -1,0 +1,6 @@
+.content > article.two_column > .left_column {
+    flex-basis: 100%;
+}
+.content > article.two_column > .right_column {
+    flex-basis: 0;
+}

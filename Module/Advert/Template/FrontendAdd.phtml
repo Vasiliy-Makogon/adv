@@ -1,0 +1,72 @@
+<?php
+
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include ($this->getRealTemplatePath('Local/MetaTags')); ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'structure.css'],
+        'advert' => ['frontend-add.css'],
+    ]) ?>
+
+</head>
+<body itemscope itemtype="https://schema.org/WebPage">
+
+<?php include $this->getRealTemplatePath('Local/FrontendTop') ?>
+
+<div id="<?= $this->getPageId() ?>" class="content">
+
+    <?php include $this->getRealTemplatePath('Common/Notification') ?>
+
+    <header>
+        <h1>Выбор способа подачи объявления</h1>
+    </header>
+
+    <div class="two_column">
+        <div class="left_column">
+            <div class="left_column_content">
+                <h2><a href="/advert/frontend-edit-advert/">Подать объявление без регистрации на сайте</a></h2>
+                <ul class="pretty_list_style_type">
+                    <li class="plus">Быстрая подача объявления &mdash; нет процедуры регистрации.</li>
+                    <li class="minus">Нет возможности редактировать добавленные объявления, удалять или поднимать их в результатах
+                        поиска.
+                    </li>
+                    <li class="minus">При подаче каждого нового объявления приходится заново заполнять свои контактные данные.</li>
+                    <li class="minus">Анонимные объявления из базы удаляются через несколько месяцев.</li>
+                    <li class="info">Данный способ подачи объявления идеально подходит для тех, кто хочет быстро разместить
+                        объявление и &laquo;забыть&raquo; о нем.
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="right_column">
+            <div class="right_column_content">
+                <h2><a href="/user/frontend-registration/">Зарегистрироваться и подать объявление</a></h2>
+                <ul class="pretty_list_style_type">
+                    <li class="plus">Возможность управлять созданными ранее объявлениями, масса функций.</li>
+                    <li class="plus">Единый аккаунт пользователя для всех объявлений &mdash; нет необходимости каждый раз заполнять
+                        свои контактные данные.
+                    </li>
+                    <li class="plus">Объявления зарегестрированных пользователей не удаляются из базы.</li>
+                    <li class="info">Данный способ подачи объявления подходит для тех, кто хочет разместить объявление на сайте и
+                        иметь возможность редактировать объявление и контактную информацию, изменять цену, поднимать
+                        объявление в результатах поиска, создавать большое количество новых объявлений и, в случае
+                        необходимости, удалять объявление с сайта.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php include $this->getRealTemplatePath('Local/FrontendBottom') ?>
+
+</body>
+</html>

@@ -1,0 +1,151 @@
+<?php
+
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Helper\SortLink;
+use Krugozor\Framework\Module\Group\Model\Group;
+use Krugozor\Framework\Module\Group\Service\GroupListService;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+/** @var GroupListService $groupListService */
+$groupListService = $this->getStorage()->get('groupListService');
+
+$groupListService
+    ->getPagination()
+    ->getHelper()
+    ->setCssNormalLinkClass('navigation_normal_link')
+    ->setRequestUriParameter('field_name', $groupListService->getAlias())
+    ->setRequestUriParameter('sort_order', $groupListService->getOrder());
+$pagination = $groupListService->getPagination();
+
+$sortLink = new SortLink();
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+        'group' => ['backend-main.css'],
+    ]) ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+<menu class="main">
+    <li><a href="/group/backend-edit/">Добавление группы</a></li>
+</menu>
+
+<table class="datatable">
+    <thead>
+    <tr>
+        <th colspan="6">Список групп</th>
+    </tr>
+    <tr>
+        <th>
+            <?php
+            echo $sortLink
+                ->setFieldName('id')
+                ->setAnchor($this->getLang()->get('content.id'))
+                ->setUrl($this->getRequest()->getCanonicalRequestUri()->getEscapeUriValue())
+                ->setIconSrc('/img/local/system/icon/')
+                ->setCurrentFieldName($groupListService->getAlias())
+                ->setCurrentSortOrder($groupListService->getOrder())
+                ->setQueryStringFromArray([
+                    'sep' => $groupListService->getPagination()->getCurrentSeparator(),
+                    'page' => $groupListService->getPagination()->getCurrentPage(),
+                ])
+                ->getHtml();
+            ?>
+        </th>
+        <th>
+            <?php
+            echo $sortLink->setFieldName('active')
+                ->setAnchor('Группа активна')
+                ->getHtml();
+            ?>
+        </th>
+        <th>
+            <?php
+            echo $sortLink->setFieldName('name')
+                ->setAnchor('Имя группы')
+                ->getHtml();
+            ?>
+        </th>
+        <th>
+            <?php
+            echo $sortLink->setFieldName('alias')
+                ->setAnchor('Алиас группы')
+                ->getHtml();
+            ?>
+        </th>
+        <th colspan="2"><?= $this->getLang()->get('content.actions') ?></th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php if ($groupListService->getList()->count()): ?>
+
+        <?php
+        /** @var Group $group */
+        foreach ($groupListService->getList()->getDataAsArray() as ['group' => $group]): ?>
+            <tr>
+                <td><?= $group->getId() ?></td>
+                <td>
+                    <span>
+                        <?php if ($group->getActive()): ?>
+                            <?= $this->getLang()->get('content.yes') ?>
+                        <?php else: ?>
+                            <?= $this->getLang()->get('content.no') ?>
+                        <?php endif; ?>
+                    </span>
+                </td>
+                <td>
+                    <a href="/group/backend-edit/?id=<?= $group->getId() ?>">
+                        <?= Format::hsc($group->getName()) ?>
+                    </a>
+                </td>
+                <td><?= $group->getAlias() ?></td>
+                <td>
+                    <a href="/group/backend-edit/?id=<?= $group->getId() ?>">
+                        <img src="/img/local/system/icon/edit.png" alt="">
+                    </a>
+                </td>
+                <td>
+                    <?php if (!in_array($group->getAlias(), ['administrator', 'user', 'guest'])): ?>
+                        <?php
+                        $str = Format::js(
+                            $this->getLang()->get('content.question_delete_group'),
+                            ['group_name' => $group->getName()]
+                        );
+                        ?>
+                        <a onclick='return confirm(<?= $str ?>)'
+                           href="/group/backend-delete/?id=<?= $group->getId() ?>&amp;referer=<?=
+                           $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>">
+                            <img src="/img/local/system/icon/delete.png" alt="">
+                        </a>
+                    <?php else: ?>
+                        <img src="/img/local/system/icon/delete_empty.png" alt="">
+                    <?php endif; ?>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+
+    <?php else: ?>
+        <tr>
+            <td colspan="5"><?= $this->getLang()->get('content.not_found_request_data') ?></td>
+        </tr>
+    <?php endif; ?>
+    </tbody>
+</table>
+
+<?php include $this->getRealTemplatePath('Common/Navigation') ?>
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

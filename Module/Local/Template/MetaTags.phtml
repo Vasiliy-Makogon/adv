@@ -1,0 +1,44 @@
+<?php
+
+use Krugozor\Framework\Registry;
+use Krugozor\Framework\View;
+
+/* @var $this View */
+
+$canonicalUrl = $this->getRequest()->getCanonicalRequestUri()->getSimpleUriValue(true);
+$description = $this->getLang()->get('meta.description');
+$keywords = $this->getLang()->get('meta.keywords');
+$robots = $this->getLang()->get('meta.robots');
+$host = $this->getRequest()->getCanonicalRequestUri()->getHost();
+$siteName = Registry::getInstance()->get('HOSTINFO.SITE_NAME');
+
+?>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="<?=$robots?>">
+<meta charset="utf-8">
+<meta name="referrer" content="unsafe-url">
+<meta name="keywords" content="<?= $keywords ?>">
+<meta name="description" content="<?= $description ?>">
+<?= $this->getLang()->get('title')->getHtml() ?>
+
+<?= $this->getLang()->get('title')->getOgHtml() ?>
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:url" content="<?= $canonicalUrl ?>">
+<meta property="og:description" content="<?= $description ?>">
+<meta property="og:site_name" content="<?= $siteName ?>">
+<meta property="og:image" content="<?= $host ?>/img/local/snippet.jpg">
+<meta property="og:image:secure_url" content="<?= $host ?>/img/local/snippet.jpg">
+<meta property="og:image:width" content="800">
+<meta property="og:image:height" content="600">
+<meta property="og:image:type" content="image/jpeg">
+
+<link rel="canonical" href="<?= $canonicalUrl ?>">
+
+<link rel="icon" href="<?= $host ?>/favicon.ico">
+<link rel="apple-touch-icon" href="<?= $host ?>/apple-touch-icon.png">
+
+<link rel="preload" href="/fonts/local/HANDGOTN.woff2" as="font" type="font/woff2" crossorigin>
+
+<script>window.yaContextCb = window.yaContextCb || []</script>
+<script src="https://yandex.ru/ads/system/context.js" async></script>

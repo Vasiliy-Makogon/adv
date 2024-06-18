@@ -1,0 +1,438 @@
+<?php
+
+use Krugozor\Framework\Helper\Form;
+use Krugozor\Framework\Helper\Format;
+use Krugozor\Framework\Helper\SortLink;
+use Krugozor\Framework\Http\Request;
+use Krugozor\Framework\Module\Advert\Model\Advert;
+use Krugozor\Framework\Module\Advert\Service\BackendAdvertsListService;
+use Krugozor\Framework\Module\Advert\Type\AdvertType;
+use Krugozor\Framework\Module\Category\Model\Category;
+use Krugozor\Framework\Module\User\Model\InviteAnonymousUser;
+use Krugozor\Framework\Module\User\Model\User;
+use Krugozor\Framework\View;
+
+/** @var View $this */
+
+$searchCategory = $this->getRequest()->getRequest('category', Request::SANITIZE_INT);
+$searchKeyword = $this->getRequest()->getRequest('keyword', Request::SANITIZE_STRING_FULLTEXT);
+$searchType = $this->getRequest()->getRequest('type', Request::SANITIZE_STRING);
+$searchUser = $this->getRequest()->getRequest('user', Request::SANITIZE_INT);
+$searchUniqueUserCookieId = $this->getRequest()->getRequest('unique_user_cookie_id', Request::SANITIZE_STRING);
+
+/** @var Category $currentCategory */
+$currentCategory = $this->getStorage()->get('currentCategory');
+
+/** @var BackendAdvertsListService $advertsListService */
+$advertsListService = $this->getStorage()->get('advertsListService');
+
+$advertsListService
+    ->getPagination()
+    ->getHelper()
+    ->setCssNormalLinkClass('navigation_normal_link')
+    ->setCssActiveLinkClass('navigation_open_link')
+    ->setRequestUriParameter('field_name', $advertsListService->getAlias())
+    ->setRequestUriParameter('sort_order', $advertsListService->getOrder())
+    ->setRequestUriParameter('category', $searchCategory)
+    ->setRequestUriParameter('user', $searchUser)
+    ->setRequestUriParameter('unique_user_cookie_id', $searchUniqueUserCookieId)
+    ->setRequestUriParameter('keyword', $searchKeyword)
+    ->setRequestUriParameter('type', $searchType);
+$pagination = $advertsListService->getPagination();
+
+$sortLink = new SortLink();
+
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <?php include($this->getRealTemplatePath('Common/MetaTags')) ?>
+
+    <?= $this->compileCss([
+        'local' => ['reset.css', 'tags.css', 'classes.css', 'backend.css'],
+        'advert' => ['backend-main.css'],
+    ]) ?>
+
+    <script>
+        const category_pid = <?= (int) $currentCategory->getPid() ?>;
+        const current_category = <?= (int) $currentCategory->getId() ?>;
+    </script>
+
+    <?= $this->getJs('local', 'library/krugozor.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.forms.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.ajax.js') ?>
+    <?= $this->getJs('local', 'library/krugozor.category-select-list-builder.js'); ?>
+    <?= $this->getJs() ?>
+
+</head>
+<body>
+
+<?php include $this->getRealTemplatePath('Common/Notification') ?>
+<?php include $this->getRealTemplatePath('Local/BackendMenu') ?>
+<menu class="main">
+    <li><a href="/advert/backend-edit/">Добавление объявления</a></li>
+</menu>
+
+<form action="<?= $this->getRequest()->getCanonicalRequestUri()->getEscapeUriValue() ?>" method="get">
+    <table class="edit">
+        <thead>
+        <tr>
+            <th colspan="2">Фильтр</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>По категориям:</td>
+            <td>
+                <div class="selects" id="js-select-category-wrapper-top"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>Поиск по слову:</td>
+            <td>
+                <input name="keyword" type="text" value="<?= Format::hsc($searchKeyword) ?>">
+            </td>
+        </tr>
+        <tr>
+            <td>Тип:</td>
+            <td class="radiobuttons_classic">
+                <?php foreach (AdvertType::ADVERT_TYPES as $type => $value): ?>
+                    <?= $this->getHelper(Form::class)->inputRadio(
+                        'type',
+                        $type,
+                        $searchType,
+                        ['id' => 'advert_type_' . $type]
+                    )->getHtml() ?>
+
+                    <?= $this->getHelper(Form::class)->label(
+                        $value, 'advert_type_' . $type
+                    )->getHtml() ?>
+                <?php endforeach; ?>
+            </td>
+        </tr>
+        <tr>
+            <td>UNIQUE USER COOKIE ID:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'unique_user_cookie_id',
+                    $searchUniqueUserCookieId,
+                    ['maxlength' => 32]
+                )->getHtml() ?>
+            </td>
+        </tr>
+        <tr>
+            <td>ID пользователя:</td>
+            <td>
+                <?= $this->getHelper(Form::class)->inputText(
+                    'user',
+                    $searchUser,
+                    ['maxlength' => 32]
+                )->getHtml() ?>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <input type="submit" value="Найти">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</form>
+
+<form action="/advert/backend-set-actions/" method="post">
+    <table class="datatable">
+        <thead>
+        <tr>
+            <th colspan="14">Список объявлений</th>
+        </tr>
+        <tr>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('id')
+                    ->setAnchor($this->getLang()->get('content.id'))
+                    ->setUrl($this->getRequest()->getCanonicalRequestUri()->getEscapeUriValue())
+                    ->setIconSrc('/img/local/system/icon/')
+                    ->setCurrentFieldName($advertsListService->getAlias())
+                    ->setCurrentSortOrder($advertsListService->getOrder())
+                    ->setQueryStringFromArray([
+                        'sep' => $advertsListService->getPagination()->getCurrentSeparator(),
+                        'page' => $advertsListService->getPagination()->getCurrentPage(),
+                        'category' => $searchCategory,
+                        'user' => $searchUser,
+                        'keyword' => $searchKeyword,
+                        'type' => $searchType,
+                        'unique_user_cookie_id' => $searchUniqueUserCookieId,
+                    ])
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('advert_create_date')
+                    ->setAnchor('Дата создания')
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('payment')
+                    ->setAnchor('Оплачено')
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('vip')
+                    ->setAnchor('VIP')
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('advert_type')
+                    ->setAnchor('Тип объявления')
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('was_moderated')
+                    ->setAnchor('Просмотрено модератором')
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('image')
+                    ->setAnchor('Изображения')
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <a id="js_advert_delete_all" href="#"><?= $this->getLang()->get('content.select_all') ?></a>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('header')
+                    ->setAnchor('Заголовок объявления')
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('category')
+                    ->setAnchor('Категория')
+                    ->getHtml();
+                ?>
+            </th>
+            <th>
+                <?php
+                echo $sortLink
+                    ->setFieldName('user_name')
+                    ->setAnchor('Имя пользователя или псевдоним')
+                    ->getHtml();
+                ?>
+            </th>
+            <th colspan="3"><?= $this->getLang()->get('content.actions') ?></th>
+        </tr>
+        </thead>
+        <tbody>
+        <?php if ($advertsListService->getList()->count()): ?>
+
+            <?php
+            /**
+             * @var Advert $advert
+             * @var User $user
+             * @var Category $category
+             * @var InviteAnonymousUser $invite_anonymous_user
+             */
+            foreach ($advertsListService->getList()->getDataAsArray() as ['advert' => $advert,
+                     'user' => $user,
+                     'category' => $category,
+                     'invite_anonymous_user' => $invite_anonymous_user]
+            ): ?>
+                <tr>
+                    <td>
+                        <?= $advert->getId() ?>
+                    </td>
+                    <td>
+                        <?= $advert->getCreateDate()->formatDateForPeople() ?>
+                    </td>
+                    <td>
+                        <?php if (!$category->getPaid()): ?>
+                            <span>&mdash;</span>
+                        <?php else: ?>
+                            <?php if ($advert->getPayment()): ?>
+                                <?= $this->getLang()->get('content.yes') ?>
+                            <?php else: ?>
+                                <span><?= $this->getLang()->get('content.no') ?></span>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php if ($advert->getVipDate()): ?>
+                            <img src="/img/local/system/icon/star.png" alt="">
+                            <small><?= $advert->getVipDate()->format('Y-m-d H:i') ?></small>
+                        <?php else: ?>
+                            <?= $this->getLang()->get('content.no') ?>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <a href="?type=<?= $advert->getType()->getValue() ?>"><?= $advert->getType()->getAsText() ?></a>
+                    </td>
+                    <td data-content-yes-no="<?= $advert->getWasModerated() ?>">
+                        <?php if ($advert->getWasModerated()): ?>
+                            <?= $this->getLang()->get('content.yes') ?>
+                        <?php else: ?>
+                            <?= $this->getLang()->get('content.no') ?>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php if ($advert->getThumbnailCount() > 1): ?>
+                            <img src="/img/local/system/icon/photos.png"
+                                 alt="" title="Изображений: <?= $advert->getThumbnailCount() ?>">
+                        <?php elseif ($advert->getThumbnailCount() == 1): ?>
+                            <img src="/img/local/system/icon/photo.png"
+                                 alt="" title="Изображений: <?= $advert->getThumbnailCount() ?>">
+                        <?php else: ?>
+                            <?= $this->getLang()->get('content.no') ?>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <label for="label_check_advert_<?= $advert->getId() ?>">
+                            <?= $this->getHelper(Form::class)->inputCheckbox(
+                                'ids[]',
+                                $advert->getId(),
+                                0,
+                                ['id' => 'label_check_advert_' . $advert->getId()]
+                            )->getHtml() ?>
+                        </label>
+                    </td>
+                    <td>
+                        <p>
+                            <b>
+                                <a target="_blank" href="/advert/<?= $advert->getId() ?>.xhtml">
+                                    <?= Format::hsc($advert->getHeader()) ?>
+                                </a>
+                            </b>
+                        </p>
+                        <?php if ($advert->getScore()): ?>
+                            Релевантность совпадения по поисковому запросу
+                            &laquo;<?= Format::outPut($searchKeyword) ?>&raquo;: <?= $advert->getScore() ?>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <a href="?category=<?= $category->getId() ?>"><?= $category->getName() ?></a>
+                    </td>
+                    <td>
+                        <?php if ($user->isGuest()): ?>
+                            <a href="?user=<?= $user->getId() ?>">
+                                <?= Format::hsc($user->getFullNameOrLogin()) ?>
+                            </a><br><br>
+                            <a target="_blank"
+                               href="?unique_user_cookie_id=<?= $advert->getUniqueUserCookieId() ?>">
+                                <?= $advert->getUniqueUserCookieId() ?>
+                            </a>
+                        <?php else: ?>
+                            <?php if ($advert->getMainUserName()): ?>
+                                <a href="?user=<?= $user->getId() ?>"><?= Format::hsc($user->getFullNameOrLogin()) ?></a>
+                            <?php else: ?>
+                                <?php if ($advert->getUserName()): ?>
+                                    <a href="?user=<?= $user->getId() ?>"><?= Format::hsc($user->getFullNameOrLogin()) ?></a>
+                                    от имени
+                                    <strong><?= Format::hsc($advert->getUserName()) ?></strong>
+                                <?php else: ?>
+                                    <a href="?user=<?= $user->getId() ?>"><?= Format::hsc($user->getFullNameOrLogin()) ?></a>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                            [<a href="/user/backend-edit/?id=<?= $user->getId() ?>">профиль</a>]
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php if ($user->isGuest() && $advert->getEmail()->getValue()): ?>
+                            <a class="js-invite-anonymous-user"
+                               href="/user/backend-invite-anonymous-user/advert/<?= $advert->getId() ?>"><img
+                                        src="/img/local/system/icon/email.png" alt=""></a>
+                            <?php if ($invite_anonymous_user->getSendDate()): ?>
+                                <small><?= $invite_anonymous_user->getSendDate()->format('d.m.Y') ?></small>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <a href="/advert/backend-edit/?id=<?= $advert->getId() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>">
+                            <img src="/img/local/system/icon/edit.png" alt="">
+                        </a>
+                    </td>
+                    <td>
+                        <?php if (!$advert->getVipDate() && !$advert->getSpecialDate()): ?>
+                            <?php
+                            $str = Format::js(
+                                $this->getLang()->get('content.question_delete_advert'),
+                                ['advert_header' => $advert->getHeader()]
+                            );
+                            ?>
+                            <a onclick='return confirm(<?= $str ?>)'
+                               href="/advert/backend-delete/?id=<?= $advert->getId() ?>&amp;referer=<?= $this->getRequest()->getRequestUri()->getUrlencodeUriValue(true) ?>">
+                                <img src="/img/local/system/icon/delete.png" alt="">
+                            </a>
+                        <?php else: ?>
+                            <img title="Нельзя удалять объявления со статусом VIP или находящиеся в Спецпредложении"
+                                 src="/img/local/system/icon/delete_empty.png" alt="">
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+
+        <?php else: ?>
+            <tr>
+                <td colspan="12">
+                    <?= $this->getLang()->get('content.not_found_request_data') ?>
+                </td>
+            </tr>
+        <?php endif; ?>
+        </tbody>
+    </table>
+
+    <table class="datatable">
+        <thead>
+        <tr>
+            <th>C отмеченными:</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                <input type="hidden" value="<?= $this->getRequest()->getRequestUri()->getEscapeUriValue(true) ?>"
+                       name="referer">
+
+                <input onclick="return confirm('Удалить выбранные объявления?')" name="delete" type="submit"
+                       value="Удалить выбранные">
+                <input name="payment" type="submit" value="Оплатить выбранные">
+                <input name="was_moderated" type="submit" value="Пометить просмотренными">
+
+                <div>
+                    <input name="change_advert_category" type="submit" value="Изменить категорию">
+                    <span id="js-select-category-wrapper-bottom"></span>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</form>
+
+<?php include $this->getRealTemplatePath('Common/Navigation') ?>
+<?php include $this->getRealTemplatePath('Common/DebugInfo') ?>
+
+</body>
+</html>

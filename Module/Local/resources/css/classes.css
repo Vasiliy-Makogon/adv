@@ -1,0 +1,866 @@
+.icon-right-arrow {
+    fill: #999;
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+}
+
+/* Заголовок блоков */
+.bheader {
+    background-color: var(--blocks-bg-color);
+    font-weight: normal;
+    color: var(--color-b-header);
+    width: 100%;
+    margin-bottom: 5px;
+    padding: 5px;
+    font-size: var(--font-size-14);
+    border-radius: var(--border-radius-common);
+}
+.bheader > a {
+    text-decoration: none;
+    color: inherit;
+}
+.add_header_icon {
+    background-position: 5px center;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    padding-left: 26px;
+}
+.add_star_icon {
+    /* https://www.svgrepo.com/svg/302554/star */
+    background-image: url(/svg/local/icon-16-star.svg);
+}
+.add_category_search_icon {
+    /* https://www.svgrepo.com/svg/449748/file-search */
+    background-image: url(/svg/local/icon-16-search.svg);
+}
+
+
+/* Всплывающий блок около текстового поля при клике по полю */
+div.animate_field_description {
+    visibility: hidden;
+    opacity: 0;
+    top: 0px;
+    left: -365px;
+    width: 0;
+    position: absolute;
+    font-size: var(--font-size-16);
+}
+input:focus + div.animate_field_description,
+textarea:focus + div.animate_field_description {
+    width: 360px;
+    visibility: visible;
+    opacity: 1;
+    z-index: 999;
+    transition: opacity 0.3s ease-out 0s;
+}
+@media screen and (max-width: 780px) {
+    div.animate_field_description {
+        visibility: hidden !important;
+    }
+}
+div.animate_field_description div.animate_field_content {
+    padding: 5px;
+    border: 1px solid var(--var-color-1);
+    background-color: var(--blocks-bg-color);
+    width: 350px;
+    outline: 5px solid white;
+}
+div.animate_field_description div.triangle-right,
+div.animate_field_description div.triangle-right-border {
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-left: 10px solid var(--blocks-bg-color);
+    border-bottom: 5px solid transparent;
+    top: 10px;
+    position: absolute;
+    right: 1px;
+    z-index: 1002;
+}
+div.animate_field_description div.triangle-right-border {
+    border-top: 6px solid transparent;
+    border-left: 12px solid var(--var-color-1);
+    border-bottom: 6px solid transparent;
+    top: 9px;
+    right: -1px;
+    z-index: 1001;
+}
+/* Для всплывающей подсказки около поля капчи меняем позицию сноски */
+div.animate_field_description.animate_field_captcha div.triangle-right {
+    top:20px;
+}
+div.animate_field_description.animate_field_captcha div.triangle-right-border {
+    top:19px;
+}
+
+
+/* Информационный блок в формах и во всплывающих подсказках */
+div.description_before_fields {
+    background-color: transparent;
+    color:#333;
+    width: auto;
+}
+/* с границей слева и серым фоном и иконкой */
+div.description_before_fields.extended {
+    background-position: 10px center;
+    background-repeat: no-repeat;
+    /* https://www.svgrepo.com/svg/449789/info-circle */
+    background-image: url(/svg/local/icon-16-info.svg);
+
+    border-left: 2px solid var(--var-color-5);
+    background-color: var(--blocks-bg-color);
+    padding: 5px 0 5px 26px;
+}
+/* 80% ширины */
+div.description_before_fields.extended_width_80 {
+    width: 80%;
+}
+@media screen and (max-width: 780px) {
+    div.description_before_fields.extended_width_80 {
+        width: 100%;
+    }
+}
+/* 100% ширины */
+div.description_before_fields.extended_width_100 {
+    width: 100%;
+}
+/* без иконки */
+div.description_before_fields.extended_without_icon {
+    background-image: none;
+    padding: 5px;
+}
+div.description_before_fields > ul {
+    margin: 10px 10px 10px 20px;
+    list-style-type: disc;
+}
+div.description_before_fields > ul > li {
+    margin: 0 0 5px 0;
+}
+div.description_before_fields > p {
+    margin: 10px;
+}
+/* Ошибка */
+div.description_before_fields.extended_error {
+    color: var(--color-error);
+    font-size: 100%;
+    padding: 2px 0 2px 26px;
+    /* https://www.svgrepo.com/svg/450119/exclamation-circle */
+    background: url('/svg/local/field_error.svg') no-repeat left center;
+    line-height: 16px;
+    margin: 5px 0 0 0;
+}
+div.description_before_fields.extended_noborder {
+    border: none;
+}
+div.description_before_fields.extended_error.arrow_top {
+    /* https://www.svgrepo.com/svg/450221/long-arrow-up */
+    background-image: url('/svg/local/field_error_arrow_top.svg');
+}
+div.description_before_fields.extended_error.arrow_bottom {
+    /* https://www.svgrepo.com/svg/450217/long-arrow-down */
+    background-image: url('/svg/local/field_error_arrow_bottom.svg');
+    margin: 0 0 5px 0;
+}
+div.description_before_fields.extended_error p,
+div.description_before_fields.extended_error code {
+    margin: 0 0 5px 0;
+}
+div.description_before_fields.extended_error code {
+    display: block;
+    padding: 3px;
+    background-color: var(--blocks-bg-color);
+    color: #666;
+    outline: 1px dashed #CCC;
+    word-break: break-all;
+}
+div.description_before_fields.extended_error p:last-child {
+    margin-bottom: 0;
+}
+/* Отступы */
+div.description_before_fields.magrin_bottom_10 {
+    margin-bottom:10px;
+}
+div.description_before_fields.magrin_bottom_20 {
+    margin-bottom:20px;
+}
+
+
+/* Блок captcha */
+.captcha_block img {
+    vertical-align: middle;
+}
+.captcha_block input {
+    width: 8rem !important;
+    text-align: center;
+    margin: 0 10px 0 0;
+    vertical-align: middle;
+}
+
+
+
+/* nowrap */
+.space_nowrap {
+    white-space: nowrap;
+}
+
+
+
+/* две колонки - универсальный класс */
+.two_column {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    /* Флексы равномерно распределяются по всей строке. Первый и последний элемент прижимаются к соответствующим краям контейнера. */
+    justify-content: space-between;
+    /* Флексы растягиваются таким образом, чтобы занять всё доступное пространство контейнера (по высоте). */
+    align-items: stretch;
+    /* Задаёт тип выравнивания строк внутри флекс-контейнера по поперечной оси при наличии свободного пространства. */
+    align-content: stretch;
+    flex-wrap: nowrap;
+}
+@media screen and (max-width: 780px) {
+    .content .two_column {
+        flex-wrap: wrap !important;
+    }
+}
+@media screen and (max-width: 780px) {
+    .content .two_column > div {
+        flex-basis: 100% !important;
+    }
+}
+.two_column .left_column,
+.two_column .right_column {
+    text-align: left;
+    /* Основа блока. Является начальным (базовым) размером элемента */
+    flex-basis: 50%;
+    /* Определяет, сколько пространства может занимать флекс внутри контейнера.
+    В качестве значения принимаются числа, они задают пропорции каждого флекса.
+    К примеру, если для всех элементов установлено значение 1, то они получатся равного размера.
+    Если какой-то элемент получил значение 2, то его размер будет в два раза больше остальных. */
+    flex-grow: 0; /* Значение по умолчанию согласно спецификации */
+    /* Коэффициент сжатия блоков в контейнере.
+    Указывает степень уменьшения по отношению к другим блокам, для размещения блоков в одну строку. */
+    flex-shrink: 1; /* Значение по умолчанию согласно спецификации */
+    /* Свойство CSS align-self выравнивает flex-элементы по текущей flex-линии, переопределяя значение свойства align-items. */
+    align-self: auto;
+}
+.two_column .left_column {
+    order: 1;
+}
+.two_column .right_column {
+    order: 2;
+}
+
+
+
+/* три колонки - универсальный класс */
+.three_column {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    /* Определяет, как браузер распределяет пространство вокруг флекс-элементов вдоль главной оси контейнера */
+    /* Флексы равномерно распределяются по всей строке. Первый и последний элемент прижимаются к соответствующим краям контейнера. */
+    justify-content: space-between;
+    /* Выравнивает флекс-элементы внутри контейнера в перпендикулярном направлении. */
+    /* Флексы растягиваются таким образом, чтобы занять всё доступное пространство контейнера (по высоте). */
+    align-items: stretch;
+    /* Задаёт тип выравнивания строк внутри флекс-контейнера по поперечной оси при наличии свободного пространства. */
+    /* Строки равномерно растягиваются, заполняя свободное пространство. */
+    align-content: stretch;
+    flex-wrap: nowrap;
+}
+.three_column > .left_column,
+.three_column > .center_column,
+.three_column > .right_column {
+    text-align: left;
+    /* Определяет, сколько пространства может занимать флекс внутри контейнера.
+    В качестве значения принимаются числа, они задают пропорции каждого флекса.
+    К примеру, если для всех элементов установлено значение 1, то они получатся равного размера.
+    Если какой-то элемент получил значение 2, то его размер будет в два раза больше остальных. */
+    flex-grow: 0;
+    /* Коэффициент сжатия блоков в контейнере.
+    Указывает степень уменьшения по отношению к другим блокам, для размещения блоков в одну строку. */
+    flex-shrink: 1;
+    /* Основа блока. Является начальным (базовым) размером элемента.
+    Возможно указывать размер в следующих единицах измерения: px, em, %, mm, pt и т.д.. */
+    flex-basis: auto;
+    /* Свойство CSS align-self выравнивает flex-элементы по текущей flex-линии, переопределяя значение свойства align-items. */
+    align-self: auto;
+}
+.three_column > .left_column {
+    order: 1;
+}
+.three_column > .center_column {
+    order: 2;
+}
+.three_column > .right_column {
+    order: 3;
+}
+
+
+/* имитация таблиц для группировки текстовых полей */
+/*
+<div class="field_row">
+    <label>Описание: </label>
+    <div class="">
+        Content
+    </div>
+</div>
+<div class="field_row_fake">
+    <div></div>
+    <div class="group">
+        Content
+    </div>
+</div>
+*/
+div.field_row,
+div.field_row_fake {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: stretch;
+    align-content: stretch;
+    flex-wrap: nowrap;
+    margin: 0 0 10px 0;
+}
+div.field_row:last-child,
+div.field_row_fake:last-child {
+    margin-bottom: 0;
+}
+@media screen and (max-width: 780px) {
+    div.field_row,
+    div.field_row_fake {
+        flex-direction: column;
+    }
+}
+
+div.field_row > label,
+div.field_row > div.group,
+div.field_row_fake > div:first-child,
+div.field_row_fake > div.group {
+    text-align: left;
+    flex-grow: 0;
+    flex-shrink: 1;
+    align-self: auto;
+}
+div.field_row > label,
+div.field_row_fake > div:first-child {
+    padding-right:10px;
+    flex-basis: 30%;
+    order: 1;
+}
+/* Обязательные поля */
+div.field_row > :first-child.compulsory:before {
+    content: '*';
+    color:#cc0000;
+    vertical-align: middle;
+}
+
+div.field_row > div.group,
+div.field_row_fake > div.group {
+    flex-basis: 70%;
+    order: 2;
+}
+@media screen and (max-width: 780px) {
+    div.field_row > label,
+    div.field_row > div.group,
+    div.field_row_fake > div:first-child,
+    div.field_row_fake > div.group {
+        flex-basis: 100%;
+    }
+    div.field_row > label,
+    div.field_row_fake > div:first-child {
+        padding-bottom: 5px;
+    }
+}
+
+/* Для работоспособности подсказок */
+div.field_row > div.group {
+    position: relative;
+}
+
+
+/* все лейбелы, в которых заключены чекбоксы */
+div.field_row > .group label {
+    cursor: pointer;
+}
+
+/* Скрыть пароль в текстовом поле */
+/* https://www.svgrepo.com/svg/450131/eye-slash */
+/* https://www.svgrepo.com/svg/450129/eye */
+div.field_row div.group.hide_show_pass_chars {
+    position: relative;
+}
+div.field_row div.group.hide_show_pass_chars input {
+    padding-left:40px !important;
+}
+div.field_row div.group.hide_show_pass_chars img {
+    cursor: pointer;
+    position: absolute;
+    top:3px;
+    left:10px;
+    z-index: 1;
+}
+
+/* обрамляющий блок некоторые элементы в одно единое визуальное целое */
+div.field_row div.fields_wrap {
+    background-color: var(--blocks-bg-color);
+    padding: 10px;
+    display: inline-block;
+    border: 1px solid #CCC;
+    border-radius: var(--border-radius-common);
+    width: auto;
+}
+
+
+
+
+/* Выбор городов */
+div.field_row div.fields_wrap.cities > p {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    align-content: flex-start;
+    margin:5px 0;
+}
+div.field_row div.fields_wrap.cities p > span:first-child {
+    font-weight:bold;
+    color:#666;
+    flex-basis: 20%;
+}
+div.field_row div.fields_wrap.cities p > span:last-child {
+    flex-basis: 80%;
+}
+@media screen and (max-width: 780px) {
+    div.field_row div.fields_wrap.cities p > span:first-child,
+    div.field_row div.fields_wrap.cities p > span:last-child {
+        flex-basis: 100%;
+    }
+}
+div.field_row div.fields_wrap.cities p > span:last-child select {
+    width: 100%;
+}
+
+
+
+
+/* У некоторых полей ввода переопределяем стили */
+div.field_row div.fields_wrap select,
+div.field_row div.fields_wrap select optgroup option,
+div.field_row div.fields_wrap select optgroup,
+div.field_row input,
+div.field_row textarea {
+    font-size: var(--font-size-13);
+}
+
+/* Красивое radio (при условии, что за input сразу идёт label)*/
+.radiobuttons_classic {
+}
+.radiobuttons_classic input[type="radio"]{
+    display:none;
+}
+.radiobuttons_classic label {
+    border-radius: var(--border-radius-common);
+    line-height: 25px;
+    padding:3px 10px 3px 23px;
+    display:inline-block;
+    margin:5px 5px 5px 0;
+    border:1px solid white;
+    cursor:pointer;
+    line-height: 25px;
+    /* https://www.svgrepo.com/svg/440158/radio-button-checked */
+    background: url(/svg/local/radiobutton_off.svg) 5px center no-repeat;
+}
+.radiobuttons_classic label:hover {
+    border:1px solid var(--form-border-color);
+    background-color: var(--form-bg-color);
+}
+.radiobuttons_classic label:active {
+    outline: 1px solid var(--form-focus-outline-color);
+}
+.radiobuttons_classic input[type="radio"]:checked + label{
+    border:1px solid var(--form-border-color);
+    /* https://www.svgrepo.com/svg/440159/radio-button-unchecked */
+    background:url(/svg/local/radiobutton_on.svg) 5px center no-repeat;
+}
+
+
+
+/* большая кнопка */
+.big_button {
+    text-align: center;
+    font-size: var(--font-size-18);
+    padding: 1rem !important;
+}
+.button_margin_auto {
+    display: block;
+    margin: 20px auto;
+}
+
+.pseudo_button:link,
+.pseudo_button_reject:link {
+    text-decoration: none;
+}
+
+.pseudo_button,
+.pseudo_button_reject {
+    text-align: center;
+    font-size: var(--font-size-16);
+    display: block;
+    border: none;
+    cursor: pointer;
+    padding: 10px 10px;
+    margin: 5px auto;
+    width: 100%;
+}
+.pseudo_button {
+    background: linear-gradient(to bottom, var(--color-desing-blue) 30%, #113b63 100%); /* W3C */
+    border-radius: var(--border-radius-common);
+}
+.pseudo_button,
+.pseudo_button:link,
+.pseudo_button:visited,
+.pseudo_button:hover,
+.pseudo_button:active {
+    color: #fff;
+}
+.pseudo_button:hover {
+    box-shadow: 0 0 5px 1px var(--color-desing-blue);
+}
+
+.pseudo_button_reject {
+    background: linear-gradient(to bottom, #cccccc 30%, #999999 100%); /* W3C */
+    border-radius: var(--border-radius-common);
+}
+.pseudo_button_reject,
+.pseudo_button_reject:link,
+.pseudo_button_reject:visited,
+.pseudo_button_reject:hover,
+.pseudo_button_reject:active {
+    color: #333333;
+}
+.pseudo_button_reject:hover {
+    box-shadow: 0 0 5px 1px #CCCCCC;
+}
+
+
+
+/* Уведомления */
+div.notification {
+    padding: 5px 10px 5px 65px;
+    margin: 0px 0 15px 0;
+    border-radius: var(--border-radius-common);
+    border:1px solid #CCC;
+}
+div.notification.notification_normal {
+    /* https://www.svgrepo.com/svg/449651/check-square */
+    background: var(--blocks-bg-color) url('/svg/local/notification_success.svg') no-repeat 15px 15px;
+}
+div.notification.notification_alert {
+    /* https://www.svgrepo.com/svg/449937/times-square */
+    background: var(--blocks-bg-color) url('/svg/local/notification_alert.svg') no-repeat 15px 15px;
+}
+div.notification.notification_warning {
+    background: var(--blocks-bg-color) url('/svg/local/notification_warning.svg') no-repeat 15px 15px;
+}
+@media screen and (max-width: 780px) {
+    div.notification {
+        padding: 5px 10px;
+        background-image: none !important;
+    }
+}
+
+div.notification h3 {
+    margin: 0 0 5px 0;
+    padding: 5px 0;
+    font-size: var(--font-size-17);
+    border-bottom: 1px dashed #999;
+}
+div.notification.notification_normal h3 {
+    color: var(--color-success);
+}
+div.notification.notification_alert h3 {
+    color: var(--color-error);
+}
+div.notification.notification_warning h3 {
+    color: var(--color-warning);
+}
+div.notification p {
+    font-size: var(--font-size-14);
+}
+
+/* Информирование об оплатах */
+div.notification > div.paragraph {
+    margin: 20px 0;
+}
+div.notification div.pseudo_button > span.nowrap {
+    white-space: nowrap;
+}
+div.notification div.paragraph .two_column {
+    flex-direction: column;
+}
+div.notification div.paragraph .two_column .left_column .left_column_content > p,
+div.notification div.paragraph .two_column .right_column .right_column_content > p {
+    margin: 10px 0;
+}
+
+div.notification div.paragraph .two_column .left_column .left_column_content > p.price_description,
+div.notification div.paragraph .two_column .right_column .right_column_content > p.price_description {
+    font-size: var(--font-size-14);
+}
+div.notification div.paragraph .two_column .left_column .left_column_content > p.price_description > span.price,
+div.notification div.paragraph .two_column .right_column .right_column_content > p.price_description > span.price {
+    font-size: 125%;
+    color:#cc0000;
+}
+div.notification div.paragraph .two_column .left_column .left_column_content img,
+div.notification div.paragraph .two_column .right_column .right_column_content img {
+    width: 100%;
+    max-width: 859px;
+    height: auto;
+    object-fit: cover;
+    margin: 10px auto;
+    outline: 1px solid #CCC;
+    display: block;
+}
+
+
+/* Блок "поделиться" в соцсети */
+div.notification_normal dl.notification_advert_share {
+    margin: 15px 0 15px 0;
+    list-style-type: none;
+}
+div.notification_normal dl.notification_advert_share dd {
+    margin: 0 0 15px 20px;
+    padding:5px;
+}
+div.notification_normal dl.notification_advert_share dd div.codes_for_blogs {
+    border: 1px dashed #CCC;
+    padding: 10px;
+    background-color: #FFF8E8;
+    word-break: break-word;
+}
+
+
+
+/* пагинация */
+.navigation_list {
+    padding: 10px;
+    margin: 15px 0 15px 0;
+    background-color: var(--blocks-bg-color);
+    border-radius: var(--border-radius-common);
+    word-wrap: break-word;
+}
+.navigation_list > p {
+    margin-bottom: 10px;
+}
+.navigation_list li {
+    font-size: var(--font-size-18);
+    white-space: nowrap;
+    display: inline;
+}
+@media screen and (max-width: 1000px) {
+    .navigation_list li {
+        font-size: var(--font-size-14);
+        line-height: 3.2rem;
+    }
+}
+.navigation_list a,
+.navigation_list span {
+    padding: 0.5rem 0.7rem;
+}
+.navigation_list span {
+    background-color: var(--color-navigation-link-bg-hover);
+    color: white;
+}
+.navigation_list li:where(:not(:last-child)) {
+    margin-right: 0.6rem;
+}
+.navigation_list li.navigation_normal_link a {
+    text-decoration: none;
+    color: var(--color-navigation-normal-link);
+}
+.navigation_list li.navigation_normal_link a:hover {
+    color: white;
+    background-color: var(--color-navigation-link-bg-hover);
+}
+
+
+
+/* Всплывающий блок выделения объявления */
+aside.payment_popup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden;
+    width: 100vw;
+    height:100vh;
+    max-height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    background: rgba(0,0,0,0.5);
+}
+aside.payment_popup > div {
+    background-color: #FFFFFF;
+    border: 1px solid #000;
+    padding: 15px;
+    width: 50%;
+}
+@media screen and (max-width: 900px) {
+    aside.payment_popup > div {
+        width: 90%;
+    }
+}
+aside.payment_popup > div > .bheader {
+    padding-left: 30px;
+}
+aside.payment_popup > div > p {
+    margin: 10px 0;
+}
+aside.payment_popup > div > p.approval_terms_of_service {
+    font-size: 15px;
+    text-align: center;
+    font-size: var(--font-size-16);
+}
+
+aside.payment_popup > div > p.approval_terms_of_service label {
+    cursor: pointer;
+}
+
+aside.payment_popup > div > p.description {
+    font-size: 90%;
+    margin-top:0;
+}
+aside.payment_popup > div > img {
+    width:100%;
+    max-width: 859px;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+    outline: 1px solid #999;
+}
+@media screen and (max-height: 800px) {
+    aside.payment_popup > div > img {
+        display: none;
+    }
+}
+
+/* Запомнить пароль */
+div.field_row div.group div#change_cookie_days{
+    font-size:11px;
+    display:none;
+    color:#333;
+    margin-top:10px;
+}
+div.field_row div.group div#change_cookie_days.show{
+    display:inline-block;
+}
+div.field_row div.group div#change_cookie_days a,
+div.field_row div.group div#change_cookie_days a:link {
+    border: 1px solid #CCC;
+    padding: 3px;
+    text-decoration: none;
+    cursor:pointer;
+}
+div.field_row div.group div#change_cookie_days a:hover {
+    background-color:#E6E6FA;
+}
+
+/* Общий стиль меню, т.е. элементов списка тега menu */
+menu.common_menu {
+    font-weight: bold;
+    color: var(--color-main-menu);
+    background-color: white;
+}
+menu.common_menu > li {
+    display: block;
+    white-space: nowrap;
+    line-height: 2.5;
+}
+menu.common_menu > li > a {
+    display: block;
+    background-position: 10px center;
+    background-repeat: no-repeat;
+    padding: 0 10px 0 36px;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius-common);
+    text-decoration: none;
+    background-color: transparent;
+    background-attachment: scroll;
+    color:var(--color-main-menu);
+}
+menu.common_menu > li > a:hover {
+    background-color: var(--blocks-bg-color);
+}
+
+
+
+/* Блоки */
+.subblock {
+    margin: 0 0 15px 0;
+}
+.subblock:last-child {
+    margin: 0;
+}
+.subblock.annotation {
+    font-size: var(--font-size-11);
+    padding: 0 10px;
+    color:#666;
+}
+@media screen and (max-width: 1000px) {
+    .subblock.annotation {
+        display: none;
+    }
+}
+
+
+.disc li {
+    list-style-type: disc;
+}
+.circle li{
+    list-style-type: circle;
+}
+
+ul.pretty_list_style_type {
+    font-size: var(--font-size-14);
+}
+ul.pretty_list_style_type li {
+    list-style-type: none;
+    padding: 0 0 0 26px;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    background-position: 0 center;
+}
+ul.pretty_list_style_type li.plus {
+    /* https://www.svgrepo.com/svg/449864/plus-circle */
+    background-image: url(/svg/local/icon-16-plus.svg);
+}
+ul.pretty_list_style_type li.minus {
+    /* https://www.svgrepo.com/svg/449837/minus-circle */
+    background-image: url(/svg/local/icon-16-minus.svg);
+}
+ul.pretty_list_style_type li.info {
+    /* https://www.svgrepo.com/svg/449789/info-circle */
+    background-image: url(/svg/local/icon-16-info.svg);
+}
+ul.pretty_list_style_type li:where(:not(:last-child)) {
+    margin-bottom: 10px;
+}
+
+/* имитация ссылки */
+.imitation_link {
+    text-decoration: underline;
+    cursor: pointer;
+    color: var(--color-primary-link);
+}
+.imitation_link:hover {
+    text-decoration: none;
+}
